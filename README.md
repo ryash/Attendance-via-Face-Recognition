@@ -7,3 +7,5 @@ B17037  ATYANT YADAV <br />
 B17076  ANIKET SAHU <br />
 B17035  ANKIT JIGANWAL <br />
 B17070  YASH KHANNA <br />
+
+Presentation: https://github.com/atyant-yadav/Attendance-via-Face-Recognition/blob/master/Attendance%20via%20Face%20Recognition.pdf <br />
