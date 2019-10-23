@@ -1,19 +1,18 @@
 const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-let roles = ['faculty','student'];
-let tableRoles = ['facultyLogin','studentsLogin'];
+let tableRoles = ['facultyLogin','studentLogin'];
 const format = require("pg-format");
 
 exports.signin = async function(req, res, next){
     
 	try{
-		let table = req.params.role;
-		if(roles.includes(table) || table == "users"){
+		if(req.params.role == 'faculty'){
+			let table = tableRoles[0];
 			let {email, password: pass} = req.body;
 			const query = `SELECT id, name, password FROM ${table} WHERE email=$1`;
 			const values = [email];
-			
+
 			db.query(query, values)
 				.then(async (result) => {
 					if(result.rows[0]){
@@ -25,7 +24,8 @@ exports.signin = async function(req, res, next){
 								{
 									id,
 									name,
-									email
+									email,
+									admin: 'true'
 								},
 								process.env.SECRET_KEY
 								);
@@ -57,6 +57,58 @@ exports.signin = async function(req, res, next){
 						
 					});
 				});
+
+		}
+		else if(req.params.role == 'student'){
+			let table = tableRoles[1];
+			let {email, password: pass} = req.body;
+			const query = `SELECT RollNo, name, password FROM ${table} WHERE email=$1`;
+			const values = [email];
+
+			db.query(query, values)
+				.then(async (result) => {
+					if(result.rows[0]){
+						let {RollNo, name, password} = result.rows[0];
+						let isMatch = await bcrypt.compare(pass, password);
+
+						if(isMatch){
+							let token = jwt.sign(
+								{
+									RollNo,
+									name,
+									email
+								},
+								process.env.SECRET_KEY
+								);
+								return res.status(200).json({
+									RollNo,
+									name,
+									email,
+									token
+								});
+						}
+						else{
+							return next({
+								status: 400,
+								message: "Invalid Email/Password."
+							});
+						}
+					}else{
+						return next({
+							status: 400,
+							message: "Invalid Email/Password."
+						});
+					}
+					
+				})
+				.catch(err => {
+					console.log(err);
+					return next({
+						status: 404
+						
+					});
+				});
+
 		}
 		else{
 			throw new Error();
@@ -87,7 +139,8 @@ exports.signup = async function(req, res, next){
 					{
 						id,
 						name,
-						email
+						email,
+						admin: 'true'
 					},
 					process.env.SECRET_KEY
 					);
@@ -109,17 +162,17 @@ exports.signup = async function(req, res, next){
 					});
 				});
 		}	
-		else if(req.params.role == 'faculty'){
+		else if(req.params.role == 'student'){
 			let table = tableRoles[1];
-			let {rollNo, name, email, password} = req.body;
+			let {rollno, name, email, password} = req.body;
 			let hashedPassword = await bcrypt.hash(password, 10);
 		
-			const query = `INSERT INTO ${table} (rollNo, name, email, password) VALUES($1,$2,$3,$4) RETURNING id`;
-			const values = [rollNo, name, email, hashedPassword];
+			const query = `INSERT INTO ${table} (rollno, name, email, password) VALUES($1,$2,$3,$4) RETURNING rollno`;
+			const values = [rollno, name, email, hashedPassword];
 		
 			db.query(query, values)
 				.then(result => {
-					let id = result.rows[0].id;
+					let id = result.rows[0].rollno;
 					let token = jwt.sign(
 					{
 						id,
@@ -147,11 +200,12 @@ exports.signup = async function(req, res, next){
 				});
 		}
 		else{
-			throw new Error();
+			throw new Error("YOU SEEM LOST");
 		}
 	} catch(err){
 		return next({
-			status: 404
+			status: 404,
+			message: err.message
 		});
 	}	
 };
