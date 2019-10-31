@@ -10,6 +10,10 @@ exports.signin = async function(req, res, next){
 		if(req.params.role == 'faculty'){
 			let table = tableRoles[0];
 			let {email, password: pass} = req.body;
+			if(!validateEmail(email)){
+				throw Error("Invalid Email");
+			}
+
 			const query = `SELECT id, name, password FROM ${table} WHERE email=$1`;
 			const values = [email];
 
@@ -25,7 +29,7 @@ exports.signin = async function(req, res, next){
 									id,
 									name,
 									email,
-									admin: 'true'
+									isAdmin: true
 								},
 								process.env.SECRET_KEY
 								);
@@ -33,6 +37,7 @@ exports.signin = async function(req, res, next){
 									id,
 									name,
 									email,
+									isAdmin: true,
 									token
 								});
 						}
@@ -61,42 +66,47 @@ exports.signin = async function(req, res, next){
 		}
 		else if(req.params.role == 'student'){
 			let table = tableRoles[1];
-			let {email, password: pass} = req.body;
-			const query = `SELECT RollNo, name, password FROM ${table} WHERE email=$1`;
-			const values = [email];
+			let {rollNo, password: pass} = req.body;
+			// if(!validateEmail(email)){
+			// 	throw Error("Invalid Email");
+			// }
+			const query = `SELECT RollNo, email, name, password FROM ${table} WHERE rollno=$1`;
+			const values = [rollNo];
 
 			db.query(query, values)
 				.then(async (result) => {
 					if(result.rows[0]){
-						let {RollNo, name, password} = result.rows[0];
+						let {RollNo, name, password, email} = result.rows[0];
 						let isMatch = await bcrypt.compare(pass, password);
 
 						if(isMatch){
 							let token = jwt.sign(
 								{
-									RollNo,
+									id: RollNo,
 									name,
-									email
+									email,
+									isAdmin: false
 								},
 								process.env.SECRET_KEY
 								);
 								return res.status(200).json({
-									RollNo,
+									id: RollNo,
 									name,
 									email,
-									token
+									token,
+									isAdmin: false
 								});
 						}
 						else{
 							return next({
 								status: 400,
-								message: "Invalid Email/Password."
+								message: "Invalid RollNo/Password."
 							});
 						}
 					}else{
 						return next({
 							status: 400,
-							message: "Invalid Email/Password."
+							message: "Invalid RollNo/Password."
 						});
 					}
 					
@@ -122,11 +132,15 @@ exports.signin = async function(req, res, next){
 };
 
 exports.signup = async function(req, res, next){
+	console.log(req.body);
 
 	try{
 		if(req.params.role == 'faculty'){
 			let table = tableRoles[0];
 			let {name, email, password} = req.body;
+			if(!validateEmail(email)){
+				throw Error("Invalid Email");
+			}
 			let hashedPassword = await bcrypt.hash(password, 10);
 			const query = `INSERT INTO ${table} (name, email, password) VALUES($1,$2,$3) RETURNING id`;
 			const values = [name, email, hashedPassword];
@@ -140,7 +154,7 @@ exports.signup = async function(req, res, next){
 						id,
 						name,
 						email,
-						admin: 'true'
+						isAdmin: true
 					},
 					process.env.SECRET_KEY
 					);
@@ -148,7 +162,8 @@ exports.signup = async function(req, res, next){
 						id,
 						name,
 						email,
-						token
+						token,
+						isAdmin: true
 					});
 				})
 				.catch(err => {
@@ -164,11 +179,14 @@ exports.signup = async function(req, res, next){
 		}	
 		else if(req.params.role == 'student'){
 			let table = tableRoles[1];
-			let {rollno, name, email, password} = req.body;
+			let {rollNo, name, email, password} = req.body;
+			if(!validateEmail(email)){
+				throw Error("Invalid Email");
+			}
 			let hashedPassword = await bcrypt.hash(password, 10);
 		
 			const query = `INSERT INTO ${table} (rollno, name, email, password) VALUES($1,$2,$3,$4) RETURNING rollno`;
-			const values = [rollno, name, email, hashedPassword];
+			const values = [rollNo, name, email, hashedPassword];
 		
 			db.query(query, values)
 				.then(result => {
@@ -177,7 +195,8 @@ exports.signup = async function(req, res, next){
 					{
 						id,
 						name,
-						email
+						email,
+						isAdmin: false
 					},
 					process.env.SECRET_KEY
 					);
@@ -185,13 +204,14 @@ exports.signup = async function(req, res, next){
 						id,
 						name,
 						email,
-						token
+						token,
+						isAdmin: false
 					});
 				})
 				.catch(err => {
 					console.log(err);
 					if(err.code == 23505){
-						err.message = "Sorry, that email is taken";		
+						err.message = "Sorry, that email or rollNo is taken";		
 					}
 					return next({
 						status: 404,
@@ -200,7 +220,7 @@ exports.signup = async function(req, res, next){
 				});
 		}
 		else{
-			throw new Error("YOU SEEM LOST");
+			throw new Error("YOU SEEM LOST!!!!!!!!");
 		}
 	} catch(err){
 		return next({
@@ -209,3 +229,13 @@ exports.signup = async function(req, res, next){
 		});
 	}	
 };
+
+
+function validateEmail(sEmail) {
+	var reEmail = /^(?:[\w\!\#\$\%\&\'\*\+\-\/\=\?\^\`\{\|\}\~]+\.)*[\w\!\#\$\%\&\'\*\+\-\/\=\?\^\`\{\|\}\~]+@(?:(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-](?!\.)){0,61}[a-zA-Z0-9]?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9\-](?!$)){0,61}[a-zA-Z0-9]?)|(?:\[(?:(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.){3}(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\]))$/;
+  
+	if(!sEmail.match(reEmail)) {
+	  return false;
+	}
+	return true;
+}
