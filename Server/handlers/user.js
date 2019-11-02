@@ -16,11 +16,6 @@ exports.getUserAttendance = function(req, res, next){
 		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
 			getDateFrom = new Date(req.query['from']);
 			getDateTo = new Date(req.query['to']);
-			
-			// getDateFrom = `${getDateFrom.getFullYear()}-${getDateFrom.getMonth() + 1}-${getDateFrom.getDate()}`;
-			// getDateTo = `${getDateTo.getFullYear()}-${getDateTo.getMonth() + 1}-${getDateTo.getDate()}`;
-
-
 		}
  
 		let rollNo = req.params.userId;
@@ -29,10 +24,8 @@ exports.getUserAttendance = function(req, res, next){
 		let query = `SELECT * FROM ${table} WHERE (rollno = $1 or rollno = '12DUMMY00') AND course_id = $2`;
 		let values = [rollNo, courseId];
 
-		if(getDateFrom.length === 10 && getDateTo.length === 10){
-			query += `AND '[$3::date, $4::date]'::daterange @> attenddate`;
-			values.push(getDateFrom);
-			values.push(getDateTo);
+		if(getDateFrom != ''  && getDateTo != ''){
+			query += `AND ('["${getDateFrom.getFullYear()}-${getDateFrom.getMonth() + 1}-${getDateFrom.getDate()}", "${getDateTo.getFullYear()}-${getDateTo.getMonth() + 1}-${getDateTo.getDate()}"]'::daterange @> attenddate OR attenddate='2011-01-01')`;
 		}
 
 		let totalDays = 0, daysAttended = 0;
@@ -56,15 +49,11 @@ exports.getUserAttendance = function(req, res, next){
 					return true;
 				});
 
-				console.log("Anjsnjs", arr);
 				arr.forEach(elem => {
 					let { rollno, attenddate } = elem;
 					if(rollno === rollNo){
 						attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
 						let cmp = new Date('2011-01-01');
-						// cmp.setDate(cmp.getDate() + 1);
-						// cmp.setHours(0,0,0,0);
-						// attenddate.setHours(0,0,0,0);
 						
 						attenddate = attenddate.toISOString().split('T')[0].toString();
 						cmp =  cmp.toISOString().split('T')[0].toString();

@@ -5,11 +5,7 @@ const { markAttendance, markAttendanceAll, getAttendanceEnh, getAttendanceAllEnh
 
 router.post("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureCorrectCourse, markAttendance);
 router.post("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureCorrectCourse, markAttendanceAll);
-// router.get("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendance);
 router.get("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendanceEnh);
-// router.get("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendanceAll);
 router.get("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendanceAllEnh);
 
-
-//getAttendance, getAttendanceAll, 
 module.exports = router;

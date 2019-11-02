@@ -34,7 +34,7 @@ exports.loginRequired = function(req, res, next) {
  * 
  * Token in the Authorization header is used to verify
  *  and 
- * decoded id must match that in the url.
+ * decoded id must match the id in the url.
  */
 exports.ensureCorrectUser = function(req, res, next) {
 	try {
@@ -72,6 +72,8 @@ exports.ensureCorrectUser = function(req, res, next) {
 
 /**
  * Function(middleware) to check if the requesting user is authorized to query for a particular course.
+ * 
+ * It runs query on the database to check.
  */
 exports.ensureCorrectCourse = function(req, res, next) {
 	try{
