@@ -16,6 +16,7 @@ exports.getUserAttendance = function(req, res, next){
 		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
 			getDateFrom = new Date(req.query['from']);
 			getDateTo = new Date(req.query['to']);
+
 		}
  
 		let rollNo = req.params.userId;

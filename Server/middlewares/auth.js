@@ -34,6 +34,7 @@ exports.loginRequired = function(req, res, next) {
  * 
  * Token in the Authorization header is used to verify
  *  and 
+
  * decoded id must match the id in the url.
  */
 exports.ensureCorrectUser = function(req, res, next) {

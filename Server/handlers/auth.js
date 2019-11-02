@@ -131,6 +131,7 @@ exports.signin = async function(req, res, next){
 };
 
 exports.signup = async function(req, res, next){
+	console.log(req.body);
 
 	try{
 		if(req.params.role == 'faculty'){
