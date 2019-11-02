@@ -2,7 +2,6 @@ const db = require("../db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 let tableRoles = ['facultyLogin','studentLogin'];
-const format = require("pg-format");
 
 exports.signin = async function(req, res, next){
     
@@ -167,7 +166,6 @@ exports.signup = async function(req, res, next){
 					});
 				})
 				.catch(err => {
-					console.log(err);
 					if(err.code == 23505){
 						err.message = "Sorry, that email is taken";		
 					}
@@ -209,7 +207,6 @@ exports.signup = async function(req, res, next){
 					});
 				})
 				.catch(err => {
-					console.log(err);
 					if(err.code == 23505){
 						err.message = "Sorry, that email or rollNo is taken";		
 					}

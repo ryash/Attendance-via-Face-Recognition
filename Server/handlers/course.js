@@ -78,7 +78,7 @@ exports.changeCriteria = function(req, res, next){
 };
 
 exports.getCourses = function(req, res, next){
-    console.log("dbvjdvj");
+
 	try{
 		let table = 'courses';
 

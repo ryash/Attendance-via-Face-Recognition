@@ -200,9 +200,7 @@ exports.getAttendanceEnh = function(req, res, next){
 		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
 			getDateFrom = new Date(req.query['from']);
 			getDateTo = new Date(req.query['to']);
-			
-			getDateFrom = `${getDateFrom.getFullYear()}-${getDateFrom.getMonth() + 1}-${getDateFrom.getDate()}`;
-			getDateTo = `${getDateTo.getFullYear()}-${getDateTo.getMonth() + 1}-${getDateTo.getDate()}`;
+
 		}
  
 		let rollNo = req.params.rollNo;
@@ -211,10 +209,9 @@ exports.getAttendanceEnh = function(req, res, next){
 		let query = `SELECT * FROM ${table} WHERE (rollno = $1 or rollno = '12DUMMY00') AND course_id = $2`;
 		let values = [rollNo, courseId];
 
-		if(getDateFrom.length === 10 && getDateTo.length === 10){
-			query += `AND '[$3, $4]'::daterange @> attenddate`;
-			values.push(getDateFrom);
-			values.push(getDateTo);
+		if(getDateFrom != '' && getDateTo != ''){
+			query += `AND ('["${getDateFrom.getFullYear()}-${getDateFrom.getMonth() + 1}-${getDateFrom.getDate()}", "${getDateTo.getFullYear()}-${getDateTo.getMonth() + 1}-${getDateTo.getDate()}"]'::daterange @> attenddate OR attenddate='2011-01-01')`;
+
 		}
 
 		let totalDays = 0, daysAttended = 0;
@@ -238,15 +235,11 @@ exports.getAttendanceEnh = function(req, res, next){
 					return true;
 				});
 
-				console.log("Anjsnjs", arr);
 				arr.forEach(elem => {
 					let { rollno, attenddate } = elem;
 					if(rollno === rollNo){
 						attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
 						let cmp = new Date('2011-01-01');
-						// cmp.setDate(cmp.getDate() + 1);
-						// cmp.setHours(0,0,0,0);
-						// attenddate.setHours(0,0,0,0);
 						
 						attenddate = attenddate.toISOString().split('T')[0].toString();
 						cmp =  cmp.toISOString().split('T')[0].toString();
@@ -288,6 +281,124 @@ exports.getAttendanceEnh = function(req, res, next){
 				else{
 					return res.status(200).json({
 						message
+					});
+				}
+			})
+			.catch(err => {
+				console.log(err);
+				return next({
+					status: 404
+					
+				});
+			});
+	}
+	catch(err){
+		return next({
+			status: 404,
+			message: err.message
+		});
+	}
+};
+
+exports.getAttendanceAllEnh = function(req, res, next){
+	try{
+		let table = 'attendance';
+		
+		let getDateTo = '';
+		let getDateFrom = '';
+		let perc = false;
+
+		if(req.query.hasOwnProperty('perc')){
+			perc = req.query['perc'];
+		}
+
+		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
+			getDateFrom = new Date(req.query['from']);
+			getDateTo = new Date(req.query['to']);
+		}
+ 
+		let courseId = req.params.courseId;
+
+		let query = `SELECT * FROM ${table} WHERE course_id = $1`;
+		let values = [courseId];
+
+		if(getDateFrom != '' && getDateTo != ''){
+			query += `AND ('["${getDateFrom.getFullYear()}-${getDateFrom.getMonth() + 1}-${getDateFrom.getDate()}", "${getDateTo.getFullYear()}-${getDateTo.getMonth() + 1}-${getDateTo.getDate()}"]'::daterange @> attenddate OR attenddate='2011-01-01')`;
+		}
+		
+		db.query(query, values)
+			.then((result) => {
+				let rows = result.rows;
+				let message = [];
+				let classDates = new Map();
+				let rNUMS = new Set();
+
+				let totalDays = 0, daysAttended = 0;
+				
+				let arr = rows.filter(element => {
+					let {  rollno, attenddate } = element;
+					if(rollno == '12DUMMY00'){
+						totalDays = totalDays + 1;
+						attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
+						let dt = attenddate.toISOString().split('T')[0];
+						classDates.set(dt, false);
+						return false;
+					}
+					else{
+						rNUMS.add(rollno);
+						return true;
+					}
+				});
+				
+				rNUMS.forEach(rn => {
+
+					daysAttended = 0;
+
+					arr = arr.filter(elemen => {
+						let { rollno, attenddate } = elemen;
+						if(rollno === rn){
+							attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
+							let cmp = new Date('2011-01-01');
+							
+							attenddate = attenddate.toISOString().split('T')[0].toString();
+							cmp =  cmp.toISOString().split('T')[0].toString();
+							if(attenddate !== cmp){
+								classDates.set(attenddate, true);
+
+								daysAttended = daysAttended + 1;
+							}
+
+							return false;
+						}
+						else{
+							return true;
+						}
+					});
+					
+					if(perc){
+						message.push({
+							rollNo: rn,
+							percentage: ( daysAttended / totalDays ) * 100,
+							totalDays,
+							daysAttended
+						});
+					}
+					else{
+						for (const [k, v] of classDates) {
+							message.push({
+								RollNo: rn,
+								CourseId: courseId,
+								Date: k,
+								Present: v
+							});
+							classDates.set(k, false);
+						}
+					}
+				});
+
+				return res.status(200).json({
+					message
+				});
 					});
 				}
 			})
@@ -409,222 +520,3 @@ exports.getAttendanceAllEnh = function(req, res, next){
 		});
 	}
 };
-
-// exports.getAttendance = function(req, res, next){
-    
-// 	try{
-// 		let table = 'attendance';
-		
-// 		let getDateTo = '';
-// 		let getDateFrom = '';
-// 		let perc = false;
-
-// 		if(req.query.hasOwnProperty('perc')){
-// 			perc = req.query['perc'];
-// 		}
-
-// 		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
-// 			getDateFrom = new Date(req.query['from']);
-// 			getDateTo = new Date(req.query['to']);
-
-// 			// validateDateRange(getDateFrom, getDateTo);
-// 		}
- 
-// 		let rollNo = req.params.rollNo;
-// 		let courseId = req.params.courseId;
-
-// 		getDummyAttendance(courseId, next, getDateFrom, getDateTo)
-// 			.then(resDummy => {
-// 				let query = `SELECT * FROM ${table} WHERE rollno = $1 AND course_id = $2`;
-// 				let values = [rollNo, courseId];
-
-// 				if(getDateFrom.length === 10 && getDateTo.length === 10){
-// 					query += `AND '[$3, $4]'::daterange @> attenddate`;
-// 					values.push(getDateFrom);
-// 					values.push(getDateTo);
-// 				}
-				
-// 				db.query(query, values)
-// 					.then((result) => {
-// 						let rows = result.rows;
-// 						let message = [];
-// 						let classDates = new Map();
-// 						resDummy.rows.forEach(element => {
-// 							let { attenddate } = element;
-// 							attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
-// 							let dt = attenddate.toISOString().split('T')[0];
-// 							classDates.set(dt, false);
-// 						});
-
-// 						rows.forEach(elem => {
-// 							let { attenddate } = elem;
-// 							attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
-// 							let cmp = new Date('2011-01-01')
-// 							// cmp.setDate(cmp.getDate() + 1);
-// 							// cmp.setHours(0,0,0,0);
-// 							// attenddate.setHours(0,0,0,0);
-							
-// 							attenddate = attenddate.toISOString().split('T')[0].toString();
-// 							cmp =  cmp.toISOString().split('T')[0].toString();
-// 							if(attenddate !== cmp){
-// 								let dt2 = attenddate;
-// 								classDates.set(dt2, true);
-// 							}
-// 						});
-
-// 						for (const [k, v] of classDates) {
-// 							message.push({
-// 								RollNo: rollNo,
-// 								CourseId: courseId,
-// 								Date: k,
-// 								Present: v
-// 							});
-// 						}  						  
-
-// 						return res.status(200).json({
-// 							message
-// 						});
-// 					})
-// 					.catch(err => {
-// 						console.log(err);
-// 						return next({
-// 							status: 404
-							
-// 						});
-// 					});
-// 			})
-// 			.catch(err => {
-// 				console.log(err);
-// 				return next({
-// 					status: 404
-					
-// 				});
-// 			});
-// 	}
-// 	catch(err){
-// 		return next({
-// 			status: 404,
-// 			message: err.message
-// 		});
-// 	}
-// };
-
-// exports.getAttendanceAll = function(req, res, next){
-    
-// 	try{
-// 		let table = 'attendance';
-		
-// 		let getDateTo = '';
-// 		let getDateFrom = '';
-// 		let perc = false;
-
-// 		if(req.query.hasOwnProperty('perc')){
-// 			perc = req.query['perc'];
-// 		}
-
-// 		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
-// 			getDateFrom = new Date(req.query['from']);
-// 			getDateTo = new Date(req.query['to']);
-
-// 			// validateDateRange(getDateFrom, getDateTo);
-// 		}
- 
-// 		let courseId = req.params.courseId;
-
-// 		let query = `SELECT * FROM ${table} WHERE course_id = $1`;
-// 		let values = [courseId];
-
-// 		if(getDateFrom.length === 10 && getDateTo.length === 10){
-// 			query += `AND '[$2, $3]'::daterange @> attenddate`;
-// 			values.push(getDateFrom);
-// 			values.push(getDateTo);
-// 		}
-
-// 		db.query(query, values)
-// 			.then((result) => {
-// 				let rows = result.rows;
-// 				let message = [];
-// 				let classDates = new Map();
-// 				let rollNums = new Set();
-
-// 				rows.forEach(element => {
-// 					if(element.rollno === '12DUMMY00'){
-// 						let { attenddate } = element;
-// 						let dt = attenddate.toISOString().split('T')[0]
-// 						classDates.set(dt, false);
-// 					}
-// 					else{
-// 						rollNums.add(element.rollno);
-// 					}
-// 				});
-
-// 				rollNums.forEach(rn => {
-// 					rows.forEach(elem => {
-// 						let { attenddate } = elem;
-// 						if(!(attenddate < new Date(2011-01-01))){
-// 							let dt2 = attenddate.toISOString().split('T')[0];
-// 							classDates.set(dt2, true);
-// 						}
-// 					});
-					
-// 					classDates.forEach((value, key) => {
-// 						message.push({
-// 							RollNo: rollNo,
-// 							CourseId: courseId,
-// 							Date: key,
-// 							Present: value
-// 						});
-
-// 						value = false;
-// 					});
-// 				});  						  
-
-// 				return res.status(200).json({
-// 					message
-// 				});
-// 			})
-// 			.catch(err => {
-// 				console.log(err);
-// 				return next({
-// 					status: 404
-					
-// 				});
-// 			});
-// 	}
-// 	catch(err){
-// 		return next({
-// 			status: 404,
-// 			message: err.message
-// 		});
-// 	}
-// };
-
-// function getDummyAttendance(courseId, next, getDateFrom, getDateTo){
-// 	try{
-// 		let table = 'attendance'; 
-// 		let rollNo = '12DUMMY00';
-
-// 		let query = `SELECT * FROM ${table} WHERE rollno = $1 AND course_id = $2`;
-// 		let values = [rollNo, courseId];
-
-// 		if(getDateFrom.length === 10 && getDateTo.length === 10){
-// 			query += `AND '[$3, $4]'::daterange @> attenddate`;
-// 			values.push(getDateFrom);
-// 			values.push(getDateTo);
-// 		}
-
-// 		return db.query(query, values)
-// 			.then((result) => {
-// 				return Promise.resolve(result);
-// 			})
-// 			.catch(err => {
-// 				return Promise.reject();
-// 			});
-// 	}
-// 	catch(err){
-// 		return next({
-// 			status: 404,
-// 			message: err.message
-// 		});
-// 	}
-// };
