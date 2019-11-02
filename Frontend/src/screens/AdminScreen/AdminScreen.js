@@ -1,118 +1,102 @@
 import React, { Component } from 'react';
 import {
-  StyleSheet,
   ScrollView,
-  View,
-  Button,
 } from 'react-native';
-
-import {
-  Colors,
-} from 'react-native/Libraries/NewAppScreen';
+import {Button, Divider} from 'react-native-elements';
 
 import AddCourse from './AddCourse.js';
-import RenderAttendance from './RenderAttendance.js';
-import TakeAttendance from './TakeAttendance.js';
-import FacultyRequestList from './FacultyRequestList.js';
+import {AppContext} from '../../../Contexts.js';
+import {modes} from '../../../Constants.js';
+import Storage from '../../storage/Storage.js';
+import MyCourses from './MyCourses.js';
+import AddFaculty from './AddFaculty.js';
 
 export default class AdminScreen extends Component {
-    constructor(){
-        super();
+
+    static contextType = AppContext;
+
+    constructor(props){
+
+        super(props);
+
         this.state = {
-            renderAttendence: false,
             addNewCourse: false,
-            openCourseRequests: false,
-            takeAttendance: false,
-            showFacultyRequests: false,
+            openMyCourses: false,
+            addFaculty: false,
+            hasError: false,
+            errorMessage: '',
         };
 
-        this.goToMainScreen = this.goToMainScreen.bind(this);
         this.onLogoutPress = this.onLogoutPress.bind(this);
+        this.goBack = this.goBack.bind(this);
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
-        this.showFacultyRequests = this.showFacultyRequests.bind(this);
-    }
-
-    showFacultyRequests(){
-      this.setState({
-        showFacultyRequests: true,
-      });
     }
 
     onLogoutPress(){
-      this.props.changeState({
+      Storage.removeItem('admin:id').then(() => {
+        return Storage.removeItem('admin:token');
+      }).then(() => {
+        this.context.changeAppState({
           isLoggedIn: false,
-          mode: 'anonymous',
+          mode: modes.ANONYMOUS,
+          id: '',
+          token: '',
+        });
+      }).catch((err) => {
+
+        console.log('Log out Error: ' + err.message);
+
+        this.setState({
+          hasError: true,
+          errorMessage: 'Failed to log out',
+        });
+
       });
     }
 
-    goToMainScreen(){
+    goBack(){
       this.setState({
-        renderAttendence: false,
         addNewCourse: false,
-        openCourseRequests: false,
-        takeAttendance: false,
-        showFacultyRequests: false,
+        openMyCourses: false,
+        addFaculty: false,
       });
     }
 
     handleBackButtonClick(){
-      this.goToMainScreen();
+      this.goBack();
       return true;
     }
 
     render() {
-      let courseUrl = 'http://10.8.15.214:8081/api/service/course/' + this.props.currentState.id;
-      let requestsUrl = 'http://10.8.15.214:8081/api/service/course/' + this.props.currentState.id;
+      let courseUrl = this.context.domain + '/api/service/course/' + this.context.id;
         return (
           this.state.addNewCourse ?
-           <AddCourse goToMainScreen={this.goToMainScreen} currentState={this.props.currentState}/> :
-           this.state.takeAttendance ?
-           <TakeAttendance
-              goToMainScreen={this.goToMainScreen}
-              currentState={this.props.currentState}
-              handleBackButtonClick={this.handleBackButtonClick}
+           <AddCourse goBack={this.goBack}/> :
+           this.state.openMyCourses ?
+            <MyCourses
               url={courseUrl}
-           />
-            : this.state.renderAttendence ?
-              <RenderAttendance
-                goToMainScreen={this.goToMainScreen}
-                currentState={this.props.currentState}
-                handleBackButtonClick={this.handleBackButtonClick}
-                url={courseUrl}
-              />
-              : this.state.showFacultyRequests ?
-              <FacultyRequestList
-                goToMainScreen={this.goToMainScreen}
-                currentState={this.props.currentState}
-                handleBackButtonClick={this.handleBackButtonClick}
-                url={requestsUrl}
-              />
-            : <ScrollView style={{padding: 20}}>
+              goBack={this.goBack}
+              handleBackButtonClick={this.handleBackButtonClick}
+            /> :
+            this.state.addFaculty ?
+            <AddFaculty
+              goBack={this.goBack}
+            /> :
+            <ScrollView style={{padding: 20}}>
             <Button
-                onPress={() => this.setState({takeAttendance: true})}
-                title="Take Attendance"
+                onPress={() => this.setState({openMyCourses: true})}
+                title="My Courses"
             />
-            <View style={{margin:20}} />
-            <Button
-                onPress={() => this.setState({renderAttendence: true})}
-                title="See Attendence Records"
-            />
-            <View style={{margin:20}} />
+            <Divider />
             <Button
               onPress = {()=>{this.setState({addNewCourse: true});}}
               title="Add New Course"
             />
-            {/* <View style={{margin:20}} />
+            <Divider />
             <Button
-              onPress={()=>{this.setState({openCourseRequests: true});}}
-              title="Course Requests"
-            /> */}
-            <View style={{margin:20}} />
-            <Button
-                onPress={() => this.showFacultyRequests()}
-                title="New Faculty Requests"
+                onPress={() => this.setState({addFaculty: true})}
+                title="Add New Faculty"
             />
-            <View style={{margin:20}} />
             <Button
                 onPress={() => this.onLogoutPress()}
                 title="Logout"
@@ -121,47 +105,3 @@ export default class AdminScreen extends Component {
         );
     }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    backgroundColor: 'black',
-  },
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-});

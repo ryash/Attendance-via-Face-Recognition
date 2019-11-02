@@ -1,36 +1,51 @@
-import React from 'react';
+import React, {Component} from 'react';
 import {
-  TouchableOpacity,
   ScrollView,
-  View,
-  ActivityIndicator,
-  Button,
-  Text,
 } from 'react-native';
 
-import Courses from './Courses.js';
+import {Button, Input, Divider} from 'react-native-elements';
 import Camera from './Camera.js';
 
-export default class TakeAttendance extends Courses{
-    constructor(){
+export default class TakeAttendance extends Component{
+    constructor(props){
 
-        super();
+        super(props);
 
-        this.state = Object.assign({}, this.state, {
+        this.state = {
             openCamera: false,
-            currentCourse: '',
-        });
+            RollNo: {
+                hasError: false,
+                errorMessage: '',
+                value: '',
+            },
+        };
 
         this.takeAttendence = this.takeAttendence.bind(this);
         this.getBack = this.getBack.bind(this);
+        this.validate = this.validate.bind(this);
     }
 
-    takeAttendence = async (course) => {
+
+
+    takeAttendence = () => {
         this.setState({
-            currentCourse: course,
             openCamera: true,
         });
     };
+
+    validate(){
+        if (this.state.RollNo.value.length === 0){
+            this.setState({
+                RollNo: {
+                    hasError: true,
+                    errorMessage: 'This field cannot be empty',
+                },
+            });
+            return false;
+        }
+
+        return true;
+    }
 
     // This function is not bound to the current context.
     // It is expected since this.camera is defined in the Camera Component.
@@ -51,24 +66,36 @@ export default class TakeAttendance extends Courses{
 
     render(){
         return (
-            this.state.isLoading ? <ActivityIndicator/> :
-            this.state.hasError ? <Text> {this.state.errorMessage} </Text> :
             this.state.openCamera ?
             <Camera toggleCamera={this.getBack} takePicture={this.takePicture}/> :
             <ScrollView>
-                {this.state.allCourses.map((val)=>{
-                    return (<TouchableOpacity>
-                        <View key={val}>
-                            <Text onPress={() => this.takeAttendence(val)}>
-                                {val}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>);
-                })}
-                <View style={{margin:20}} />
+                <Input
+                    placeholder = "Roll No."
+                    onChangeText={(RollNo) => {
+                        this.setState({
+                            RollNo: {
+                                hasError: false,
+                                value: RollNo,
+                            },
+                        });
+                    }}
+                    value={this.state.RollNo.value}
+                    errorMessage={this.state.RollNo.errorMessage}
+                    errorStyle={{color: 'red'}}
+                />
+                <Divider />
+                <Button
+                    title="Mark Attendance"
+                    onPress={() => {
+                        this.setState({
+                            openCamera: true,
+                        });
+                    }}
+                />
+                <Divider />
                 <Button
                     title="Back"
-                    onPress={()=>this.props.goToMainScreen()}
+                    onPress={()=>this.props.goBack()}
                 />
             </ScrollView>
         );

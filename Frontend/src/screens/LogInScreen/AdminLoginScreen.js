@@ -1,95 +1,132 @@
 import React, { Component } from 'react';
 import {
     ScrollView,
-    Text,
-    TextInput,
-    View,
-    Button,
-    BackHandler,
 } from 'react-native';
+import {Input, Divider, Header, Text, Button} from 'react-native-elements';
+
+import Storage from '../../storage/Storage.js';
+import {AppContext} from '../../../Contexts.js';
+import {modes, makeCancelablePromise} from '../../../Constants.js';
 
 export default class AdminLoginScreen extends Component {
+
+    static contextType = AppContext;
 
     constructor(props){
         super(props);
         this.state = {
-            Email: '',
-            Password: '',
+            Email: {
+                hasError: false,
+                errorMessage: '',
+                value: '',
+            },
+            Password: {
+                hasError: false,
+                errorMessage: '',
+                value: '',
+            },
             hasError: false,
             errorMessage: '',
+            isLoading: false,
         };
+
+        // Array of all the async tasks(promises).
+        this.promises = [];
+
         this.validate = this.validate.bind(this);
         this.onLoginPress = this.onLoginPress.bind(this);
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
-    }
 
-    componentDidMount(){
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     componentWillUnmount(){
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
-
-    handleBackButtonClick(){
-        this.props.changeState({
-            modeChosen: false,
-        });
-        return true;
+        for (let prom of this.promises) {
+            // Cancelling any pending promises on unmount.
+            prom.cancel();
+        }
     }
 
     validate(){
-        let emReg = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-        if (!this.state.Email.match(emReg)){
+        let isValid = true;
+        if (this.state.Email.value.length === 0){
             this.setState({
-                hasError: true,
-                errorMessage: 'Email Invalid',
+                Email : {
+                    hasError: true,
+                    errorMessage: 'This field cannot be empty',
+                },
             });
-            return false;
+            isValid = false;
         }
-        else if (this.state.Password.length === 0){
+
+        if (this.state.Password.value.length === 0){
             this.setState({
-                hasError: true,
-                errorMessage: "Password cann't be empty",
+                Password : {
+                    hasError: true,
+                    errorMessage: 'This field cannot be empty',
+                },
             });
-            return false;
+            isValid = false;
         }
-        return true;
+
+        return isValid;
     }
 
     onLoginPress(){
 
         // Primary validation of Email and Password.
         if (this.validate()){
-            fetch('http://10.8.15.214:8081/api/auth/signin/faculty/', {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: this.state.Email,
-                    password: this.state.Password,
-                }),
-                method: 'POST',
-            }).then(async (data)=>{
-                if (data.status === 200){
-                    return data.json();
-                }
+            this.setState({
+                isLoading: true,
+            }, () => {
 
-                let {error} = await data.json();
-                return Promise.reject(new Error(error.message));
+                let cancFetch = makeCancelablePromise(fetch(this.context.domain + '/api/auth/signin/faculty/', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: this.state.Email.value,
+                        password: this.state.Password.value,
+                    }),
+                    method: 'POST',
+                }));
 
-            }).then(body=>{
-                let {id, token} = body;
-                this.props.changeState({
-                    id, token,
-                    isLoggedIn: true,
-                    mode: 'Admin',
+                cancFetch.promise.then(async (data)=>{
+                    if (data.status === 200){
+                        return data.json();
+                    }
+
+                    let {error} = await data.json();
+                    error.isCanceled = false;
+                    return Promise.reject(error);
+
+                }).then(body=>{
+                    let {id, token} = body;
+                    this.setState({
+                        isLoading: false,
+                    }, () => {
+                        this.context.changeAppState({
+                            id, token,
+                            isLoggedIn: true,
+                            mode: modes.ADMIN,
+                        });
+                    });
+                    Storage.setItem('admin:id', id).then(() => {
+                        return Storage.setItem('admin:token', token);
+                    }).then(() => {
+                        console.log('admin id & token saved successfully!');
+                    }).catch((err) => {
+                        console.log('Failed to save admin id & token.\n Error: ' + err.message);
+                    });
+                }).catch(err => {
+                    if (!err.isCanceled){
+                        this.setState({
+                            hasError: true,
+                            isLoading: false,
+                            errorMessage: err.message,
+                        });
+                    }
                 });
-            }).catch(err => {
-                this.setState({
-                    hasError: true,
-                    errorMessage: err.message,
-                });
+
+                this.promises.push(cancFetch);
             });
         }
     }
@@ -97,47 +134,43 @@ export default class AdminLoginScreen extends Component {
     render() {
         return (
             <ScrollView style={{padding: 20}}>
-                <Text
-                    style={{fontSize: 27}}>
-                    Login
-                </Text>
-                {this.state.hasError ? <Text>
-                    {this.state.errorMessage}
-                </Text> : <></>
+                <Header
+                    centerComponent = {{text: 'Log In', style: { color: '#fff' }}}
+                />
+                <Divider />
+                {this.state.hasError ?
+                    <>
+                        <Text style={{color: 'red'}}> {this.state.errorMessage} </Text>
+                        <Divider />
+                    </> :
+                    <></>
                 }
-                <TextInput
+                <Input
                     placeholder="Email"
-                    onChangeText={(Email) => this.setState({Email, hasError: false})}
-                    value={this.state.Email}
+                    onChangeText={(Email) => this.setState({Email : { hasError: false, value: Email }})}
+                    value={this.state.Email.value}
+                    errorMessage={this.state.Email.hasError ? this.state.Email.errorMessage : undefined}
+                    errorStyle={{color: 'red'}}
                 />
-                <TextInput
+                <Divider />
+                <Input
                     placeholder="Password"
-                    onChangeText={(Password) => this.setState({Password, hasError: false})}
                     secureTextEntry={true}
-                    value={this.state.Password}
+                    onChangeText={(Password) => this.setState({Password : { hasError: false, value: Password }})}
+                    value={this.state.Password.value}
+                    errorMessage={this.state.Password.hasError ? this.state.Password.errorMessage : undefined}
+                    errorStyle={{color: 'red'}}
                 />
-                <View style={{margin:7}} />
+                <Divider />
                 <Button
                     onPress={() => this.onLoginPress()}
                     title="Log In"
+                    type="outline"
+                    color="red"
+                    loading={this.state.isLoading ? true : false}
+                    disabled={this.state.isLoading ? true : false}
                 />
-                <View style={styles.verticalRightLayout}>
-                    <Text style={styles.switchLoginMode} onPress={this.props.toggleRegisterPage}> Make a new admin request </Text>
-                </View>
             </ScrollView>
         );
     }
 }
-
-let styles = {
-    switchLoginMode: {
-        fontSize: 16,
-        color: 'blue',
-        textAlign: 'right',
-        textDecorationLine: 'underline',
-        textDecorationStyle: 'solid',
-    },
-    verticalRightLayout:{
-        flexDirection: 'column',
-    },
-};

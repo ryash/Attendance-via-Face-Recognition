@@ -10,11 +10,17 @@ import {
 } from 'react-native';
 
 import RenderAttendanceStudent from './RenderAttendanceStudent.js';
+import {AppContext} from '../../../Contexts.js';
+import {makeCancelablePromise} from '../../../Constants.js';
 
 export default class RenderAttendanceCourse extends Component {
 
-    constructor(){
-      super();
+  static contextType = AppContext;
+
+    constructor(props){
+
+      super(props);
+
       this.state = {
         isLoading: true,
         hasError: false,
@@ -23,6 +29,8 @@ export default class RenderAttendanceCourse extends Component {
         renderStudentAttendance: false,
         currentRollNo: '',
       };
+
+      this.promises = [];
 
       this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
       this.goBack = this.goBack.bind(this);
@@ -36,6 +44,11 @@ export default class RenderAttendanceCourse extends Component {
 
     componentWillUnmount(){
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+
+        for (let prom of this.promises){
+          // Cancel any pending promises.
+          prom.cancel();
+        }
     }
 
     handleBackButtonClick(){
@@ -44,7 +57,21 @@ export default class RenderAttendanceCourse extends Component {
     }
 
     renderAttendenceList(list, keys){
+      if  (list.length === 0){
+        return (<Text> No Attendance Data! </Text>);
+      }
       return (<ScrollView style={{padding: 20}}>
+        {
+          <View style={{flex: 1, alignSelf: 'stretch', flexDirection: 'row' }}>
+          {
+            Object.getOwnPropertyNames(list[0]).map((val, ind) => {
+              return (<Text key={ind}>
+                {val}
+              </Text>);
+            })
+          }
+          </View>
+        }
         {
           list.map((element, ind) => {
             return this.renderRow(element, keys[ind]);
@@ -58,26 +85,19 @@ export default class RenderAttendanceCourse extends Component {
     }
 
     renderRow(row, key) {
-      return (<>
-        {
-          Object.getOwnPropertyNames(row).map((val, ind) => {
-            return (<Text key={ind}>
-              {val}
-            </Text>);
-          })
-        }
-        <TouchableOpacity key={key} style={{flex: 1, alignSelf: 'stretch', flexDirection: 'row' }}>
-          <View onPress={()=>this.setState({renderStudentAttendance: true, currentRollNo: row.RollNo})}>
-          {
-            Object.getOwnPropertyNames(row).map((val, ind) => {
-              return (<Text key={ind}>
-                {row[val]}
-              </Text>);
-            })
-          }
-          </View>
-        </TouchableOpacity>
-      </>);
+      return (
+          <TouchableOpacity key={key}>
+            <View style={{flex: 1, alignSelf: 'stretch' , flexDirection: 'row'}}>
+            {
+              Object.getOwnPropertyNames(row).map((val, ind) => {
+                return (<Text key={ind} onPress={()=>this.setState({renderStudentAttendance: true, currentRollNo: row.rollNo})}>
+                  {row[val]}
+                </Text>);
+              })
+            }
+            </View>
+          </TouchableOpacity>
+        );
     }
 
     render() {
@@ -93,15 +113,12 @@ export default class RenderAttendanceCourse extends Component {
         this.state.renderStudentAttendance ?
         <RenderAttendanceStudent
           goBack={this.goBack}
-          url={'http://10.8.15.214:8081/api/service/' + this.props.currentState.id + '/' + this.props.course + '/' + this.state.currentRollNo}
-          currentState={this.props.currentState}
+          url={this.context.domain + '/api/service/' + this.context.id + '/' + this.props.course.courseId + '/' + this.state.currentRollNo}
         /> :
         this.state.hasError ?
-        <View>
-          <Text>
+          <Text style={{color: 'red'}}>
             {this.state.errorMessage}
-          </Text>
-        </View> :
+          </Text> :
         this.renderAttendenceList(attendenceData, attKeys)
       );
     }
@@ -110,42 +127,45 @@ export default class RenderAttendanceCourse extends Component {
 
       BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
 
-      fetch('http://10.8.15.214:8081/api/service/' + this.props.currentState.id + '/' + this.props.course + '?perc=true', {
+      let cancFetch = makeCancelablePromise(fetch(this.context.domain + '/api/service/' + this.context.id + '/' + this.props.course.courseId + '?perc=true', {
         headers: {
-          'Authorization': 'Bearer ' + this.props.currentState.token,
+          'Authorization': 'Bearer ' + this.context.token,
         },
         method: 'GET',
-      }).then(async res => {
+      }));
+
+      cancFetch.promise.then(async res => {
         if (res.status === 200){
           return res.json();
         }
         else {
-          let {error} = await res.json();
-          return Promise.reject(new Error(error.message));
+          try {
+            let pm = makeCancelablePromise(res.json());
+            this.promises.push(pm);
+            let {error} = await pm.promise;
+            error.isCanceled = false;
+            return Promise.reject(error);
+          } catch (err){
+            return Promise.reject(err);
+          }
         }
-      }).then(attData => {
+      })
+      .then(attData => {
+        console.log(attData);
         this.setState({
-          attendenceData: attData,
+          attendenceData: attData.message,
           isLoading: false,
         });
       }).catch(err => {
-        this.setState({
-          isLoading: false,
-          errorMessage: err.message,
-        });
+        console.log(err);
+        if (!err.isCanceled){
+          this.setState({
+            isLoading: false,
+            errorMessage: err.message,
+          });
+        }
       });
+
+      this.promises.push(cancFetch);
     }
 }
-
-let styles = {
-    switchLoginMode: {
-        fontSize: 16,
-        color: 'blue',
-        textAlign: 'right',
-        textDecorationLine: 'underline',
-        textDecorationStyle: 'solid',
-    },
-    verticalRightLayout:{
-        flexDirection: 'column',
-    },
-};

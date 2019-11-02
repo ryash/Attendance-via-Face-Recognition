@@ -1,61 +1,73 @@
 import React, { Component } from 'react';
 import {
     ScrollView,
-    Text,
-    TextInput,
     View,
-    Button,
-    BackHandler,
 } from 'react-native';
+import {Input, Divider, Header, Text, Button} from 'react-native-elements';
+
+import Storage from '../../storage/Storage.js';
+import {AppContext} from '../../../Contexts.js';
+import {modes, makeCancelablePromise} from '../../../Constants.js';
 
 export default class UserLoginScreen extends Component {
+
+    static contextType = AppContext;
 
     constructor(){
         super();
         this.state = {
-            RollNo: '',
-            Password: '',
+            RollNo: {
+                hasError: false,
+                errorMessage: '',
+                value: '',
+            },
+            Password: {
+                hasError: false,
+                errorMessage: '',
+                value: '',
+            },
             hasError: false,
             errorMessage: '',
+            isLoading: false,
         };
+
+        // Array of all the async tasks(promises).
+        this.promises = [];
 
         this.validate = this.validate.bind(this);
         this.onLoginPress = this.onLoginPress.bind(this);
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
 
-    }
-
-    componentDidMount(){
-        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     componentWillUnmount(){
-        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-    }
-
-    handleBackButtonClick(){
-        this.props.changeState({
-            modeChosen: false,
-        });
-        return true;
+        for (let prom of this.promises) {
+            // Cancelling any pending promises on unmount.
+            prom.cancel();
+        }
     }
 
     validate(){
+
+        let isValid = true;
         if (this.state.RollNo.length === 0){
             this.setState({
-                hasError: true,
-                errorMessage: "Roll Number cann't be empty",
+                RollNo: {
+                    hasError: true,
+                    errorMessage: 'This field cannot be empty',
+                },
             });
-            return false;
+            isValid = false;
         }
-        else if (this.state.Password.length === 0){
+        if (this.state.Password.value.length === 0){
             this.setState({
-                hasError: true,
-                errorMessage: "Password cann't be empty",
+                Password : {
+                    hasError: true,
+                    errorMessage: 'This field cannot be empty',
+                },
             });
-            return false;
+            isValid = false;
         }
-        return true;
+        return isValid;
     }
 
     onLoginPress(){
@@ -63,78 +75,110 @@ export default class UserLoginScreen extends Component {
         // Primary validation of Email and Password.
 
         if (this.validate()){
-            fetch('http://10.8.15.214:8081/api/auth/signin/student/', {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    rollNo: this.state.RollNo,
-                    password: this.state.Password,
-                }),
-                method: 'POST',
-            }).then(async (data)=>{
-                if (data.status === 200){
-                    return data.json();
-                }
+            this.setState({
+                isLoading: true,
+            }, () => {
 
-                let {error} = await data.json();
-                return Promise.reject(new Error(error.message));
+                let cancFetch = makeCancelablePromise(fetch(this.context.domain + '/api/auth/signin/student/', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        rollNo: this.state.RollNo.value.toUpperCase(),
+                        password: this.state.Password.value,
+                    }),
+                    method: 'POST',
+                }));
 
-            }).then(body=>{
-                let {id, token} = body;
-                this.props.changeState({
-                    id, token,
-                    isLoggedIn: true,
-                    mode: 'user',
+                cancFetch.promise.then(async (data)=>{
+                    if (data.status === 200){
+                        return data.json();
+                    }
+
+                    let {error} = await data.json();
+                    error.isCanceled = false;
+                    return Promise.reject(error);
+
+                }).then(body=>{
+                    let {id, token} = body;
+                    this.setState({
+                        isLoading: false,
+                    }, () => {
+                        this.context.changeAppState({
+                            id, token,
+                            isLoggedIn: true,
+                            mode: modes.USER,
+                        });
+                    });
+                    Storage.setItem('user:id', id).then(() => {
+                        return Storage.setItem('user:token', token);
+                    }).then(() => {
+                        console.log('user id & token saved successfully!');
+                    }).catch((err) => {
+                        console.log('Failed to save user id & token.\n Error: ' + err.message);
+                    });
+                }).catch(err => {
+                    if (!err.isCanceled){
+                        console.log(err.message);
+                        this.setState({
+                            hasError: true,
+                            isLoading: false,
+                            errorMessage: err.message,
+                        });
+                    }
                 });
-            }).catch(err => {
-                this.setState({
-                    hasError: true,
-                    errorMessage: err.message,
-                });
+
+                this.promises.push(cancFetch);
+
             });
         }
     }
 
     render() {
         return (
-            <ScrollView style={{padding: 20}}>
-                <Text
-                    style={{fontSize: 27}}>
-                    Login
-                </Text>
-                {this.state.hasError ? <Text>
-                    {this.state.errorMessage}
-                </Text> : <></>
+            <ScrollView>
+                <Header
+                    centerComponent = {{text: 'Log In', style: { color: '#fff' }}}
+                />
+                <Divider/>
+                {this.state.hasError ?
+                    <>
+                        <Text style={{color: 'red'}}> {this.state.errorMessage} </Text>
+                        <Divider />
+                    </> :
+                    <></>
                 }
-                <TextInput
+                <Input
                     placeholder="Roll No."
-                    onChangeText={(RollNo) => {
-                        this.setState({
-                            RollNo,
-                            hasError: false,
-                        });
-                    }}
-                    value={this.state.RollNo}
+                    onChangeText={(RollNo) => this.setState({RollNo : { hasError: false, value: RollNo }})}
+                    value={this.state.RollNo.value}
+                    errorMessage={this.state.RollNo.hasError ? this.state.RollNo.errorMessage : undefined}
+                    errorStyle={{color: 'red'}}
                 />
-                <TextInput
+                <Divider />
+                <Input
                     placeholder="Password"
-                    onChangeText={(Password) => {
-                        this.setState({
-                            Password,
-                            hasError: false,
-                        });
-                    }}
                     secureTextEntry={true}
-                    value={this.state.Password}
+                    onChangeText={(Password) => this.setState({Password : { hasError: false, value: Password }})}
+                    value={this.state.Password.value}
+                    errorMessage={this.state.Password.hasError ? this.state.Password.errorMessage : undefined}
+                    errorStyle={{color: 'red'}}
                 />
-                <View style={{margin:7}} />
+                <Divider />
                 <Button
                     onPress={() => this.onLoginPress()}
                     title="Log In"
+                    loading={this.state.isLoading ? true : false}
+                    disabled={this.state.isLoading ? true : false}
                 />
                 <View style={styles.verticalRightLayout}>
-                    <Text style={styles.switchLoginMode} onPress={this.props.toggleRegisterPage}> register as a new user </Text>
+                <Text
+                        style={styles.switchLoginMode}
+                        onPress={() => this.context.changeAppState({
+                            openSignUpPage: true,
+                        })} >
+                    Register as a new student
+                </Text>
                 </View>
             </ScrollView>
         );

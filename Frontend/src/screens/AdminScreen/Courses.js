@@ -1,10 +1,15 @@
 import { Component } from 'react';
 import {BackHandler} from 'react-native';
+import { makeCancelablePromise } from '../../../Constants';
+import {AppContext} from '../../../Contexts.js';
 
 export default class Courses extends Component{
-    constructor(){
 
-        super();
+    static contextType = AppContext;
+
+    constructor(props){
+
+        super(props);
 
         this.state = {
             allCourses: [],
@@ -13,40 +18,53 @@ export default class Courses extends Component{
             isLoading: true,
         };
 
+        this.promises = [];
+
     }
 
     componentWillUnmount(){
         BackHandler.removeEventListener('hardwareBackPress', this.props.handleBackButtonClick);
+        for (let prom of this.promises){
+            // Cancel any pending promises on unmount.
+            prom.cancel();
+        }
     }
 
     componentDidMount(){
 
         BackHandler.addEventListener('hardwareBackPress', this.props.handleBackButtonClick);
 
-        fetch(this.props.url, {
+        let cancFetch = makeCancelablePromise(fetch(this.props.url, {
             headers: {
-                'Authorization': 'Bearer ' + this.props.currentState.token,
+                'Authorization': 'Bearer ' + this.context.token,
             },
             method: 'GET',
-        }).then(async res => {
+        }));
+
+        cancFetch.promise.then(async res => {
             if (res.status === 200){
                 return res.json();
             }
             else {
                 let {error} = await res.json();
-                return Promise.reject(new Error(error.message));
+                error.isCanceled = false;
+                return Promise.reject(error);
             }
         }).then(bdy => {
             this.setState({
-                allCourses: bdy.message.map(val => val.courseId),
+                allCourses: bdy.message,
                 isLoading: false,
             });
         }).catch(err => {
-            this.setState({
-                hasError: true,
-                errorMessage: err.message,
-                isLoading: false,
-            });
+            if (!err.isCanceled){
+                this.setState({
+                    hasError: true,
+                    errorMessage: err.message,
+                    isLoading: false,
+                });
+            }
         });
+
+        this.promises.push(cancFetch);
     }
 }

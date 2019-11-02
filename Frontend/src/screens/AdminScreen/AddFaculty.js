@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import {
     ScrollView,
-    View,
+    Alert,
+    BackHandler,
 } from 'react-native';
+
 import {Input, Divider, Header, Text, Button} from 'react-native-elements';
 
-import Storage from '../../storage/Storage.js';
 import {AppContext} from '../../../Contexts.js';
-import {modes, makeCancelablePromise} from '../../../Constants.js';
+import {makeCancelablePromise} from '../../../Constants.js';
 
-export default class UserSignUpScreen extends Component {
-
+export default class AddFaculty extends Component{
     static contextType = AppContext;
 
     constructor(){
@@ -22,11 +22,6 @@ export default class UserSignUpScreen extends Component {
                 value: '',
             },
             Email: {
-                hasError: false,
-                errorMessage: '',
-                value: '',
-            },
-            RollNo: {
                 hasError: false,
                 errorMessage: '',
                 value: '',
@@ -51,6 +46,12 @@ export default class UserSignUpScreen extends Component {
 
         this.onProceedPress = this.onProceedPress.bind(this);
         this.validate = this.validate.bind(this);
+        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+    }
+
+    handleBackButtonClick(){
+        this.props.goBack();
+        return true;
     }
 
     validate() {
@@ -125,24 +126,19 @@ export default class UserSignUpScreen extends Component {
             isValid = false;
         }
 
-        if (this.state.RollNo.value.length === 0){
-            this.setState({
-                RollNo: {
-                    hasError: true,
-                    errorMessage: 'This field cannot be empty',
-                },
-            });
-            isValid = false;
-        }
-
         return isValid;
     }
 
     componentWillUnmount(){
+        BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
         for (let prom of this.promises) {
             // Cancelling any pending promises on unmount.
             prom.cancel();
         }
+    }
+
+    componentDidMount(){
+        BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
     onProceedPress(){
@@ -150,15 +146,15 @@ export default class UserSignUpScreen extends Component {
             this.setState({
                 isLoading: true,
             }, () => {
-                let cancFetch = makeCancelablePromise(fetch(this.context.domain + '/api/auth/signup/student/', {
+                let cancFetch = makeCancelablePromise(fetch(this.context.domain + '/api/auth/signup/faculty/' + this.context.id, {
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.context.token,
                     },
                     body: JSON.stringify({
                         name: this.state.Name.value,
                         email: this.state.Email.value,
                         password: this.state.Password.value,
-                        rollNo: this.state.RollNo.value.toUpperCase(),
                     }),
                     method: 'POST',
                 }));
@@ -171,24 +167,17 @@ export default class UserSignUpScreen extends Component {
                         error.isCanceled = false;
                         return Promise.reject(error);
                     }
-                }).then(body=>{
-                    let {id, token} = body;
-                    this.setState({
-                        isLoading: false,
-                    }, () => {
-                        this.context.changeAppState({
-                            id, token,
-                            isLoggedIn: true,
-                            mode: modes.USER,
-                        });
-                    });
-                    Storage.setItem('user:id', id).then(() => {
-                        return Storage.setItem('user:token', token);
-                    }).then(() => {
-                        console.log('user id & token saved successfully!');
-                    }).catch((err) => {
-                        console.log('Failed to save user id & token.\n Error: ' + err.message);
-                    });
+                }).then(() => {
+                    Alert.alert('Notification',
+                    'Faculty has been successfully Registered',
+                    [
+                        {
+                            text: 'OK', onPress: () =>{
+                                this.props.goBack();
+                            },
+                        },
+                    ]
+                    );
                 }).catch((err) => {
                     if (!err.isCanceled){
                         this.setState({
@@ -208,7 +197,7 @@ export default class UserSignUpScreen extends Component {
         return (
             <ScrollView style={{padding: 20, backgroundColor: '#9900ff'}}>
                 <Header
-                    centerComponent = {{text: 'Register', color: '#f00'}}
+                    centerComponent = {{text: 'Add Faculty', color: '#f00'}}
                     containerStyle = {{backgroundColor: '#0ff'}}
                 />
                 <Divider />
@@ -236,14 +225,6 @@ export default class UserSignUpScreen extends Component {
                 />
                 <Divider />
                 <Input
-                    placeholder="Roll No."
-                    onChangeText={(RollNo) => this.setState({RollNo : { hasError: false, value: RollNo }})}
-                    value={this.state.RollNo.value}
-                    errorMessage={this.state.RollNo.hasError ? this.state.RollNo.errorMessage : undefined}
-                    errorStyle={{color: 'red'}}
-                />
-                <Divider />
-                <Input
                     placeholder="Password"
                     secureTextEntry={true}
                     onChangeText={(Password) => this.setState({Password : { hasError: false, value: Password }})}
@@ -263,34 +244,21 @@ export default class UserSignUpScreen extends Component {
                 <Divider />
                 <Button
                     onPress={() => this.onProceedPress()}
-                    title="Proceed"
+                    title="Add Faculty"
                     style={{backgroundColor: '#00ff00'}}
                     loading={this.state.isLoading ? true : false}
                     disabled={this.state.isLoading ? true : false}
                 />
-                <View style={styles.verticalRightLayout}>
-                    <Text
-                        style={styles.switchLoginMode}
-                        onPress={() => this.context.changeAppState({
-                            openSignUpPage: false,
-                        })} >
-                    Already Registered ? Login
-                </Text>
-                </View>
+                <Divider />
+                <Button
+                    onPress={() => this.props.goBack()}
+                    title="Back"
+                    style={{backgroundColor: '#00ff00'}}
+                    loading={this.state.isLoading ? true : false}
+                    disabled={this.state.isLoading ? true : false}
+                />
             </ScrollView>
         );
     }
 }
 
-let styles = {
-    switchLoginMode: {
-        fontSize: 16,
-        color: 'blue',
-        textAlign: 'right',
-        textDecorationLine: 'underline',
-        textDecorationStyle: 'solid',
-    },
-    verticalRightLayout:{
-        flexDirection: 'column',
-    },
-};

@@ -1,20 +1,21 @@
 import React, { Component } from 'react';
 import {
-  Text,
-  View,
-  Button,
   ScrollView,
   ActivityIndicator,
-  TouchableHighlightComponent,
 } from 'react-native';
 
+import {Button, Divider, Text} from 'react-native-elements';
 import Courses from '../AdminScreen/Courses.js';
 import RenderAttendanceStudent from '../AdminScreen/RenderAttendanceStudent';
+import {AppContext} from '../../../Contexts.js';
 
 export default class MyCourses extends Courses{
-    constructor(){
 
-        super();
+    static contextType = AppContext;
+
+    constructor(props){
+
+        super(props);
 
         this.state = Object.assign({}, this.state, {
             renderAttendance: false,
@@ -31,6 +32,7 @@ export default class MyCourses extends Courses{
     }
 
     renderAttendance(course){
+
         this.setState({
             currentCourse: course,
             renderAttendance: true,
@@ -40,27 +42,26 @@ export default class MyCourses extends Courses{
     render(){
         return (
             this.state.isLoading ? <ActivityIndicator/> :
-            this.state.hasError ? <Text> {this.state.errorMessage} </Text> :
+            this.state.hasError ? <Text style={{color: 'red'}}> {this.state.errorMessage} </Text> :
             this.state.renderAttendance ?
             <RenderAttendanceStudent
                 goBack={this.goBack}
-                url={'http://10.8.15.214:8081/api/user/' + '/' + this.props.currentState.id + '/' + this.props.currentCourse}
-                currentState={this.props.currentState}
+                url={this.context.domain + '/api/user/' + this.context.id + '/' + this.state.currentCourse.courseId}
             /> :
             <ScrollView>
                 {this.state.allCourses.map((val)=>{
-                    return (<TouchableHighlightComponent>
-                        <View key={val}>
-                            <Text onPress={() => this.renderAttendance(val)}>
-                                {val}
-                            </Text>
-                        </View>
-                    </TouchableHighlightComponent>);
+                    return (
+                            <Button
+                                key = {val.courseId}
+                                onPress={() => this.renderAttendance(val)}
+                                title = {val.courseId + ': ' + val.courseName}
+                            />
+                        );
                 })}
-                <View style={{margin:20}} />
+                <Divider />
                 <Button
                     title="Back"
-                    onPress={()=>this.props.goBack()}
+                    onPress={() => this.props.goBack()}
                 />
             </ScrollView>
         );
