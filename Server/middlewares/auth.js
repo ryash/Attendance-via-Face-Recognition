@@ -9,6 +9,7 @@ const db = require("../db");
  * Token in the Authorization header is used to verify.
  */
 exports.loginRequired = function(req, res, next) {
+	
 	try{
 		const token = req.headers.authorization.split(" ")[1];
 		jwt.verify(token, process.env.SECRET_KEY, function(err, decoded){
@@ -34,10 +35,10 @@ exports.loginRequired = function(req, res, next) {
  * 
  * Token in the Authorization header is used to verify
  *  and 
-
  * decoded id must match the id in the url.
  */
 exports.ensureCorrectUser = function(req, res, next) {
+
 	try {
 		const token = req.headers.authorization.split(" ")[1];
 		let id;

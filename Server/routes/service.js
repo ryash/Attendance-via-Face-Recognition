@@ -8,6 +8,4 @@ router.post("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureCo
 router.get("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendanceEnh);
 router.get("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendanceAllEnh);
 
-
-//getAttendance, getAttendanceAll, 
 module.exports = router;
