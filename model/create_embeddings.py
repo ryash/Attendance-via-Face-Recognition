@@ -1,5 +1,6 @@
 import cv2
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import numpy as np
 import glob
 from numpy import genfromtxt
@@ -16,7 +17,8 @@ from keras.engine.topology import Layer
 from keras import backend as K
 from keras_openface import utils
 from keras_openface.utils import LRN2D
-
+#tf.logging.set_verbosity(tf.logging.ERROR)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 def create_model(Input) :
       x = ZeroPadding2D(padding=(3, 3), input_shape=(96, 96, 3))(Input)
       x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1')(x)
@@ -276,7 +278,7 @@ if __name__ == "__main__" :
 
       # Set layer weights of the model
       for name in weights:
-            print("[+] Setting weights........... ")
+       #     print("[+] Setting weights........... ")
             if model.get_layer(name) != None:
                   model.get_layer(name).set_weights(weights_dict[name])
             elif model.get_layer(name) != None:
@@ -284,5 +286,5 @@ if __name__ == "__main__" :
 
                   
       input_embeddings = create_input_image_embeddings()
-      print(input_embeddings)
+      #print(input_embeddings)
       np.save("embeddings.npy",input_embeddings)
