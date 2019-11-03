@@ -258,7 +258,7 @@ if __name__ == "__main__" :
                   person_name = os.path.splitext(os.path.basename(file))[0]
 
                   image = cv2.imread(file, 1)
-        
+                  #image resize can be done here to reflect in whole model.
                   gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                   faces = face_cascade.detectMultiScale(gray_img, 1.2, 5)
 
