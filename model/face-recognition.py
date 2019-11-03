@@ -1,4 +1,6 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+import sys
 import glob
 import numpy as np
 from numpy import genfromtxt
@@ -8,8 +10,11 @@ from keras.layers import Input
 from keras import backend as K
 from keras_openface import utils
 from keras_openface.utils import LRN2D
-from create_embeddings import create_model   
-
+from create_embeddings import create_model
+import tensorflow as tf   
+# f=open(os.devnull,'w')
+# sys.stdout=f
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 Input = Input(shape=(96, 96, 3))
 model = create_model(Input)
 
@@ -19,7 +24,7 @@ weights_dict = utils.load_weights()
 
 # Set layer weights of the model
 for name in weights:
-      print("[+] Setting weights........... ")
+    #  print("[+] Setting weights........... ")
       
       if model.get_layer(name) != None:
             model.get_layer(name).set_weights(weights_dict[name])
@@ -82,7 +87,8 @@ def recognize_faces(embeddings) :
       #faces = face_cascade.detectMultiScale(gray_img, 1.2, 5)
 
             # Loop through all the faces detected
-      for img in glob.glob("/home/ryash/Desktop/lap/Attendance-via-Face-Recognition/model/*.jpg"):
+#      f.close()
+      for img in glob.glob("/home/ryash/Desktop/lap/Attendance-via-Face-Recognition/model/Attend_Images/*.jpg"):
             cap=cv2.imread(img)
             #reshape of image can be done here.
             image=cap
@@ -96,7 +102,7 @@ def recognize_faces(embeddings) :
                   with open('output.csv','w') as f:
                         f.write(identity)
                         f.write('\n')
-                  print(identity)
+                  #print(identity)
                   # if identity is not None:
                   #       cv2.rectangle(image,(x, y),(x+w, y+h),(100,150,150),2)
                   #       cv2.putText(image, str(identity).title(), (x+5,y-5), font, 1, (150,100,150), 2)
@@ -116,11 +122,11 @@ def load_embeddings() :
       input_embeddings = {}
       embedding_file = np.load('embeddings.npy',allow_pickle=True)
       for k,v in embedding_file[()].items() :
-            print(type(v))
+       #     print(type(v))
             input_embeddings[k] = v
             
       return input_embeddings
 
 embeddings = load_embeddings()
-print(embeddings)
+#print(embeddings)
 recognize_faces(embeddings)
