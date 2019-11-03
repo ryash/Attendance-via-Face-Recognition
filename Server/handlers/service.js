@@ -200,7 +200,6 @@ exports.getAttendanceEnh = function(req, res, next){
 		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
 			getDateFrom = new Date(req.query['from']);
 			getDateTo = new Date(req.query['to']);
-
 		}
  
 		let rollNo = req.params.rollNo;
@@ -211,7 +210,6 @@ exports.getAttendanceEnh = function(req, res, next){
 
 		if(getDateFrom != '' && getDateTo != ''){
 			query += `AND ('["${getDateFrom.getFullYear()}-${getDateFrom.getMonth() + 1}-${getDateFrom.getDate()}", "${getDateTo.getFullYear()}-${getDateTo.getMonth() + 1}-${getDateTo.getDate()}"]'::daterange @> attenddate OR attenddate='2011-01-01')`;
-
 		}
 
 		let totalDays = 0, daysAttended = 0;
@@ -263,10 +261,8 @@ exports.getAttendanceEnh = function(req, res, next){
 
 				for (const [k, v] of classDates) {
 					message.push({
-						RollNo: rollNo,
-						CourseId: courseId,
 						Date: k,
-						Present: v
+						Present: v ? 'P' : 'A'
 					});
 				}  	
 				
@@ -351,7 +347,7 @@ exports.getAttendanceAllEnh = function(req, res, next){
 				});
 				
 				rNUMS.forEach(rn => {
-
+					let enrolled = false;
 					daysAttended = 0;
 
 					arr = arr.filter(elemen => {
@@ -367,120 +363,8 @@ exports.getAttendanceAllEnh = function(req, res, next){
 
 								daysAttended = daysAttended + 1;
 							}
-
-							return false;
-						}
-						else{
-							return true;
-						}
-					});
-					
-					if(perc){
-						message.push({
-							rollNo: rn,
-							percentage: ( daysAttended / totalDays ) * 100,
-							totalDays,
-							daysAttended
-						});
-					}
-					else{
-						for (const [k, v] of classDates) {
-							message.push({
-								RollNo: rn,
-								CourseId: courseId,
-								Date: k,
-								Present: v
-							});
-							classDates.set(k, false);
-						}
-					}
-				});
-
-				return res.status(200).json({
-					message
-				});
-					});
-				}
-			})
-			.catch(err => {
-				console.log(err);
-				return next({
-					status: 404
-					
-				});
-			});
-	}
-	catch(err){
-		return next({
-			status: 404,
-			message: err.message
-		});
-	}
-};
-
-exports.getAttendanceAllEnh = function(req, res, next){
-	try{
-		let table = 'attendance';
-		
-		let getDateTo = '';
-		let getDateFrom = '';
-		let perc = false;
-
-		if(req.query.hasOwnProperty('perc')){
-			perc = req.query['perc'];
-		}
-
-		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
-			getDateFrom = new Date(req.query['from']);
-			getDateTo = new Date(req.query['to']);
-			
-			getDateFrom = `${getDateFrom.getFullYear()}-${getDateFrom.getMonth() + 1}-${getDateFrom.getDate()}`;
-			getDateTo = `${getDateTo.getFullYear()}-${getDateTo.getMonth() + 1}-${getDateTo.getDate()}`;
-		}
- 
-		let courseId = req.params.courseId;
-
-		let query = `SELECT * FROM ${table} WHERE course_id = $1`;
-		let values = [courseId];
-
-		if(getDateFrom.length === 10 && getDateTo.length === 10){
-			query += `AND '[$2, $3]'::daterange @> attenddate`;
-			values.push(getDateFrom);
-			values.push(getDateTo);
-		}
-		
-		db.query(query, values)
-			.then((result) => {
-				let rows = result.rows;
-				let message = [];
-				let classDates = new Map();
-				let rNUMS = new Set();
-				
-				let arr = rows.filter(element => {
-					let {  rollno, attenddate } = element;
-					if(rollno == '12DUMMY00'){
-						attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
-						let dt = attenddate.toISOString().split('T')[0];
-						classDates.set(dt, false);
-						return false;
-					}
-					else{
-						rNUMS.add(rollno);
-						return true;
-					}
-				});
-				
-				rNUMS.forEach(rn => {
-					arr = arr.filter(elemen => {
-						let { rollno, attenddate } = elemen;
-						if(rollno === rn){
-							attenddate.setDate(attenddate.getDate() + 1); //INCREMENT DATE BY ONE
-							let cmp = new Date('2011-01-01');
-							
-							attenddate = attenddate.toISOString().split('T')[0].toString();
-							cmp =  cmp.toISOString().split('T')[0].toString();
-							if(attenddate !== cmp){
-								classDates.set(attenddate, true);
+							else{
+								enrolled = true;
 							}
 
 							return false;
@@ -489,15 +373,27 @@ exports.getAttendanceAllEnh = function(req, res, next){
 							return true;
 						}
 					});
-	
-					for (const [k, v] of classDates) {
-						message.push({
-							RollNo: rn,
-							CourseId: courseId,
-							Date: k,
-							Present: v
-						});
-						classDates.set(k, false);
+
+					if(enrolled) {
+						if(perc){
+							message.push({
+								rollNo: rn,
+								percentage: ( daysAttended / totalDays ) * 100,
+								totalDays,
+								daysAttended
+							});
+						}
+						else{
+							for (const [k, v] of classDates) {
+								message.push({
+									RollNo: rn,
+									CourseId: courseId,
+									Date: k,
+									Present: v ? 'P' : 'A'
+								});
+								classDates.set(k, false);
+							}
+						}
 					}
 				});
 

@@ -1,7 +1,7 @@
 const db = require("../db");
 
 exports.getUserAttendance = function(req, res, next){
-    
+
 	try{
 		let table = 'attendance';
 		
@@ -16,7 +16,6 @@ exports.getUserAttendance = function(req, res, next){
 		if(req.query.hasOwnProperty('from') && req.query.hasOwnProperty('to')){
 			getDateFrom = new Date(req.query['from']);
 			getDateTo = new Date(req.query['to']);
-
 		}
  
 		let rollNo = req.params.userId;
@@ -78,16 +77,14 @@ exports.getUserAttendance = function(req, res, next){
 
 				for (const [k, v] of classDates) {
 					message.push({
-						RollNo: rollNo,
-						CourseId: courseId,
 						Date: k,
-						Present: v
+						Present: v ? 'P' : 'A'
 					});
 				}  	
 				
 				if(perc){
 					return res.status(200).json({
-						RollNo: rollNo,
+						rollNo: rollNo,
 						percentage: ( daysAttended / totalDays ) * 100,
 						totalDays,
 						daysAttended
@@ -116,6 +113,7 @@ exports.getUserAttendance = function(req, res, next){
 };
 
 exports.getUserCourses = function(req, res, next){
+	
 	try{
 		let table = 'attendance';
  

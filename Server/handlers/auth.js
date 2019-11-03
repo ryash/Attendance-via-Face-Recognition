@@ -75,13 +75,13 @@ exports.signin = async function(req, res, next){
 			db.query(query, values)
 				.then(async (result) => {
 					if(result.rows[0]){
-						let {RollNo, name, password, email} = result.rows[0];
+						let {rollno, name, password, email} = result.rows[0];
 						let isMatch = await bcrypt.compare(pass, password);
 
 						if(isMatch){
 							let token = jwt.sign(
 								{
-									id: RollNo,
+									id: rollno,
 									name,
 									email,
 									isAdmin: false
@@ -89,7 +89,7 @@ exports.signin = async function(req, res, next){
 								process.env.SECRET_KEY
 								);
 								return res.status(200).json({
-									id: RollNo,
+									id: rollno,
 									name,
 									email,
 									token,
@@ -131,51 +131,9 @@ exports.signin = async function(req, res, next){
 };
 
 exports.signup = async function(req, res, next){
-	console.log(req.body);
 
 	try{
-		if(req.params.role == 'faculty'){
-			let table = tableRoles[0];
-			let {name, email, password} = req.body;
-			if(!validateEmail(email)){
-				throw Error("Invalid Email");
-			}
-			let hashedPassword = await bcrypt.hash(password, 10);
-			const query = `INSERT INTO ${table} (name, email, password) VALUES($1,$2,$3) RETURNING id`;
-			const values = [name, email, hashedPassword];
-
-			db.query(query, values)
-				.then(result => {
-					let id = result.rows[0].id;
-					
-					let token = jwt.sign(
-					{
-						id,
-						name,
-						email,
-						isAdmin: true
-					},
-					process.env.SECRET_KEY
-					);
-					return res.status(200).json({
-						id,
-						name,
-						email,
-						token,
-						isAdmin: true
-					});
-				})
-				.catch(err => {
-					if(err.code == 23505){
-						err.message = "Sorry, that email is taken";		
-					}
-					return next({
-						status: 404,
-						message: err.message
-					});
-				});
-		}	
-		else if(req.params.role == 'student'){
+		if(req.params.role == 'student'){
 			let table = tableRoles[1];
 			let {rollNo, name, email, password} = req.body;
 			if(!validateEmail(email)){
@@ -219,6 +177,56 @@ exports.signup = async function(req, res, next){
 		else{
 			throw new Error("YOU SEEM LOST!!!!!!!!");
 		}
+	} catch(err){
+		return next({
+			status: 404,
+			message: err.message
+		});
+	}	
+};
+
+exports.signupFaculty = async function(req, res, next){
+
+	try{
+		let table = tableRoles[0];
+		let {name, email, password} = req.body;
+		if(!validateEmail(email)){
+			throw Error("Invalid Email");
+		}
+		let hashedPassword = await bcrypt.hash(password, 10);
+		const query = `INSERT INTO ${table} (name, email, password) VALUES($1,$2,$3) RETURNING id`;
+		const values = [name, email, hashedPassword];
+
+		db.query(query, values)
+			.then(result => {
+				let id = result.rows[0].id;
+				
+				let token = jwt.sign(
+				{
+					id,
+					name,
+					email,
+					isAdmin: true
+				},
+				process.env.SECRET_KEY
+				);
+				return res.status(200).json({
+					id,
+					name,
+					email,
+					token,
+					isAdmin: true
+				});
+			})
+			.catch(err => {
+				if(err.code == 23505){
+					err.message = "Sorry, that email is taken";		
+				}
+				return next({
+					status: 404,
+					message: err.message
+				});
+			});
 	} catch(err){
 		return next({
 			status: 404,

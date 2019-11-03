@@ -1,12 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { signup, signin } = require("../handlers/auth");
+const { signup, signin, signupFaculty } = require("../handlers/auth");
+const { loginRequired, ensureCorrectUser } = require("../middlewares/auth");
 
 /**
  * Route for signing up.
  * role can be either faculty or student.
  */
 router.post("/signup/:role", signup);
+
+/**
+ * Route for signing up faculty.
+ */
+router.post("/signup/faculty/:facultyId", loginRequired, ensureCorrectUser, signupFaculty);
 
 /**
  * Route for signing in.
