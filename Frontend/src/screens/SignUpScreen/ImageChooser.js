@@ -14,10 +14,10 @@ export default class ImageChooser extends Component{
         super();
         this.state = {
             fileURI: '',
-            mode: '',
             fileBase64: '',
         };
 
+        this.confirmImage = this.confirmImage.bind(this);
         this.chooseImage = this.chooseImage.bind(this);
     }
 
@@ -39,10 +39,17 @@ export default class ImageChooser extends Component{
             } else {
                 this.setState({
                     fileURI: response.uri,
-                    fileBase64: 'data:image/jpeg;base64,' + this.state.fileData,
+                    fileBase64: 'data:image/jpeg;base64,' + response.data,
                 });
-                this.props.setUserImage('data:image/jpeg;base64,' + response.data);
             }
+        });
+    }
+
+    confirmImage(){
+        this.props.setUserImage(this.state.fileBase64);
+        this.setState({
+            fileURI: '',
+            fileBase64: '',
         });
     }
 
@@ -50,10 +57,16 @@ export default class ImageChooser extends Component{
         return (<>
             <View>
                 {this.state.fileBase64 !== '' ?
-                    <Image
-                        source={{uri: this.state.fileBase64}}
-                        style = {styles.images}
-                    /> :
+                    <>
+                        <Image
+                            source={{uri: this.state.fileBase64, height: 20, width: 20}}
+                            style = {styles.images}
+                        />
+                        <Button
+                            title = "Confirm This Image"
+                            onPress = {this.confirmImage}
+                        />
+                    </> :
                     <></>
                 }
                 <View style={{margin:7}} />

@@ -8,11 +8,16 @@ import {
 } from 'react-native';
 
 import {RNCamera} from 'react-native-camera';
+import {AppContext} from '../../../Contexts.js';
 
 export default class Camera extends Component {
 
+    static contextType = AppContext;
+
     constructor(props){
         super(props);
+
+        this.promises = [];
 
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
@@ -23,6 +28,10 @@ export default class Camera extends Component {
 
     componentWillUnmount(){
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+        for (let prom of this.promises){
+            // Cancel any pending promises on unmount.
+            prom.cancel();
+        }
     }
 
     handleBackButtonClick(){

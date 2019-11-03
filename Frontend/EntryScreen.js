@@ -1,10 +1,11 @@
 // Library Component Imports
 import React, {Component} from 'react';
 import {Input, Icon, Button, Divider} from 'react-native-elements';
-
+import {ScrollView} from 'react-native';
 // Asset Imports
 import {AppContext} from './Contexts.js';
 import Storage from './src/storage/Storage.js';
+import { makeCancelablePromise } from './Constants.js';
 
 export default class EntryScreen extends Component{
 
@@ -18,6 +19,8 @@ export default class EntryScreen extends Component{
 			errorMessage: '',
 			domain: '',
 		};
+
+		this.promises = [];
 
 		// Binding the functions to current object's context.
 		this.validate = this.validate.bind(this);
@@ -43,23 +46,42 @@ export default class EntryScreen extends Component{
 			return false;
 		}
 
-		Storage.setItem('domain', this.state.domain);
-
 		return true;
 	}
 
 	onClickHandler(){
 		if (this.validate()){
-			this.context.changeAppState({
-				domain: this.state.domain,
-				isDomainSet: true,
+
+			let prom = makeCancelablePromise(Storage.setItem('domain', this.state.domain));
+
+			this.promises.push(prom);
+
+			prom.promise
+			.then(() => {
+				console.log('Domain successfully set');
+			})
+			.catch(() => {
+				console.log("Cann't store domain in storage");
+			})
+			.finally(() => {
+				this.context.changeAppState({
+					domain: this.state.domain,
+					isDomainSet: true,
+				});
 			});
+		}
+	}
+
+	componentWillUnmount(){
+		for (let prom of this.promises){
+			// Cancel any pending promises
+			prom.cancel();
 		}
 	}
 
 	render(){
 		return (
-			<>
+			<ScrollView contentContainerStyle={{ backgroundColor: '#00ff55'}}>
 				<Input
 					placeholder="Your Server URL"
 					leftIcon={
@@ -81,10 +103,9 @@ export default class EntryScreen extends Component{
 				<Divider />
 				<Button
 					title="Continue"
-					style={{borderLeftColor: 'red'}}
 					onPress={this.onClickHandler}
 				/>
-			</>
+			</ScrollView>
 		);
 	}
 
