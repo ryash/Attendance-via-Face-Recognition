@@ -53,7 +53,7 @@ exports.markAttendance = function(req, res, next){
 
 			let rnum = '';
 			if(results.length > 0 && results[0] != 'None'){
-				rnum = elem.substring(0, 6); 
+				rnum = results[0].substring(0, 6); 
 			}
 
 			if(rnum == '' || rnum != rollNo){
