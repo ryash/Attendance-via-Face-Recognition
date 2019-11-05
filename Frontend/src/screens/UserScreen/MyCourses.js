@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import {
   ScrollView,
   ActivityIndicator,
@@ -9,8 +9,17 @@ import Courses from '../AdminScreen/Courses.js';
 import RenderAttendanceStudent from '../AdminScreen/RenderAttendanceStudent';
 import {AppContext} from '../../../Contexts.js';
 
+/**
+ * UI Component to show all the courses belonging to the relevant student.
+ * This component applies to the students.
+ */
 export default class MyCourses extends Courses{
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(props){
@@ -21,16 +30,26 @@ export default class MyCourses extends Courses{
             renderAttendance: false,
         });
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.goBack = this.goBack.bind(this);
         this.renderAttendance = this.renderAttendance.bind(this);
     }
 
+    /**
+     * The function which is passed to other components which they can call to return back to this component.
+     */
     goBack(){
         this.setState({
             renderAttendance: false,
         });
     }
 
+    /**
+     * The Function which is called when user clicks on some course description.
+     * Renders the attendance of the student in the corresponding course.
+     * @param {Object} course - Object representing the course the attendance is rendered for.
+     */
     renderAttendance(course){
 
         this.setState({

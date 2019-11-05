@@ -9,7 +9,6 @@
 // Library Component Imports
 import React, {PureComponent} from 'react';
 import {ActivityIndicator} from 'react-native';
-import {Text} from 'react-native-elements';
 
 // Application Component Imports
 import EntryScreen from './EntryScreen.js';
@@ -23,6 +22,9 @@ import {AppContext} from './Contexts.js';
 import {modes, makeCancelablePromise} from './Constants.js';
 import Storage from './src/storage/Storage.js';
 
+/**
+ * Main Application Component
+ */
 class App extends PureComponent {
   constructor(props) {
     super(props);

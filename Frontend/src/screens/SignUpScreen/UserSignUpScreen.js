@@ -9,8 +9,17 @@ import Storage from '../../storage/Storage.js';
 import {AppContext} from '../../../Contexts.js';
 import {modes, makeCancelablePromise} from '../../../Constants.js';
 
+/**
+ * UI Component for registering a student.
+ * This component applies to the students.
+ */
 export default class UserSignUpScreen extends Component {
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(){
@@ -49,10 +58,17 @@ export default class UserSignUpScreen extends Component {
         // Array of all the async tasks(promises).
         this.promises = [];
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.onProceedPress = this.onProceedPress.bind(this);
         this.validate = this.validate.bind(this);
     }
 
+    /**
+     * The function which is called before the student submits
+     * the registation credentials to the server.
+     * Does Basic Validation of all the entered credentials.
+     */
     validate() {
         let emReg = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
@@ -145,6 +161,9 @@ export default class UserSignUpScreen extends Component {
         }
     }
 
+    /**
+     * The function which is called when the user submits the credentials to the server.
+     */
     onProceedPress(){
         if (this.validate()){
             this.setState({

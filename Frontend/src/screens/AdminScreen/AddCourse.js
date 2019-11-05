@@ -10,8 +10,17 @@ import { Input, Button, Divider, Text } from 'react-native-elements';
 import {AppContext} from '../../../Contexts.js';
 import { makeCancelablePromise } from '../../../Constants.js';
 
+/**
+ * UI Component to add a new course.
+ * This component applies to the faculties.
+ */
 export default class AddCourse extends Component {
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(props){
@@ -20,9 +29,9 @@ export default class AddCourse extends Component {
 
         this.state = {
             CourseCode: {
-                hasError: false,
-                errorMessage: '',
-                value: '',
+                hasError: false, // Flag indicating if there is an error.
+                errorMessage: '', // This is the invalidation message, set when course code is invalid with the invalidation resaon.
+                value: '', // Current course code value.
             },
             CourseName: {
                 hasError: false,
@@ -34,13 +43,21 @@ export default class AddCourse extends Component {
             errorMessage: '',
         };
 
+        // Keeps the list of all the asynchronous task,
+        // which may potentially change the component state after completion.
         this.promises = [];
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.validate = this.validate.bind(this);
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
         this.addCourse = this.addCourse.bind(this);
     }
 
+    /**
+     * The function which is called before the faculty submits the course data.
+     * Validates all the entered course data.
+     */
     validate(){
         let isValid = true;
 
@@ -80,14 +97,22 @@ export default class AddCourse extends Component {
         }
     }
 
+    /**
+     * Handler which is called when the user hits back button on his/her device
+     */
     handleBackButtonClick(){
         this.props.goBack();
         return true;
     }
 
+    /**
+     * Function which is called when faculty submits the course data to the server.
+     */
     addCourse(){
         if (this.validate()){
             this.setState({isLoading: true}, () => {
+                // Making the fetch request cancelable so that if user hits back button
+                // while the request is in progress, it can be cancelled in the componentDidMount method.
                 let cancFetch = makeCancelablePromise(fetch(this.context.domain + '/api/service/course/' + this.context.id, {
                     headers: {
                         'Authorization': 'Bearer ' + this.context.token,

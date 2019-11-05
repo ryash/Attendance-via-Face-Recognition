@@ -6,8 +6,21 @@ import { makeCancelablePromise } from '../../../Constants.js';
 import { AppContext } from '../../../Contexts.js';
 import ImageChooser from '../SignUpScreen/ImageChooser.js';
 
+/**
+ * The UI Component to add new students to the course.
+ * The number of students which are added are dynamic.
+ * However, the number of students should be as large as possible, i.e.
+ * all the students should be enrolled in one go, if possible, as model needs to be
+ * retrained whenever a new student is added, which is slow.
+ * This component applies to the faculties.
+ */
 export default class AddStudent extends Component{
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(props){
@@ -21,14 +34,24 @@ export default class AddStudent extends Component{
             isLoading: false,
         };
 
+
+        // Keeps the list of all the asynchronous task,
+        // which may potentially change the component state after completion.
         this.promises = [];
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
         this.setImage = this.setImage.bind(this);
         this.addStudent = this.addStudent.bind(this);
         this.validate = this.validate.bind(this);
     }
 
+    /**
+     * The function which is called before the faculty submits
+     * the roll no and images of all the students to the server.
+     * Validates all the entered student credentials.
+     */
     validate(){
         let isValid = true;
         let rollNoSet = new Set();
@@ -79,12 +102,19 @@ export default class AddStudent extends Component{
         return isValid;
     }
 
+    /**
+     * Sets the image of the student as chosen by the faculty.
+     * @param {number} ind - the index of the student credentials field, the user is adding the image to.
+     */
     setImage(ind){
         return (img) => {
             this.state.students[ind].images.push(img);
         };
     }
 
+    /**
+     * The function which is called when the faculty submits the student data to the server.
+     */
     addStudent(){
         let subUrl = this.context.domain + '/api/service/register/' + this.context.id;
         subUrl = subUrl + '/' + this.props.course.courseId;
@@ -161,6 +191,10 @@ export default class AddStudent extends Component{
         }
     }
 
+    /**
+     * This function creates new input fields to add one more student in the list of students to be
+     * enrolled in the course.
+     */
     addNewStudent(){
         this.setState({
             students: [...this.state.students, {
@@ -175,6 +209,9 @@ export default class AddStudent extends Component{
         });
     }
 
+    /**
+     * Handler which is called when the user hits back button on his/her device
+     */
     handleBackButtonClick(){
         this.props.goBack();
         return true;

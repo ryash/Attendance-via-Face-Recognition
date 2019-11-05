@@ -10,6 +10,10 @@ import AddStudent from './AddStudent.js';
 import TakeAttendance from './TakeAttendance.js';
 import RenderAttendanceCourse from './RenderAttendanceCourse.js';
 
+/**
+ * UI Component to render the list of actions which can be taken on any course.
+ * This component applies to the faculties.
+ */
 export default class RenderCourseActions extends Component{
     constructor(props){
 
@@ -21,10 +25,15 @@ export default class RenderCourseActions extends Component{
             addStudent: false,
         };
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
         this.goBack = this.goBack.bind(this);
     }
 
+    /**
+     * Handler which is called when the user hits back button on his/her device
+     */
     handleBackButtonClick(){
         this.props.goBack();
         return true;
@@ -38,6 +47,9 @@ export default class RenderCourseActions extends Component{
         BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
+    /**
+     * The function which is passed to other components which they can call to return back to this component.
+     */
     goBack(){
         this.setState({
             renderCourseAttendance: false,

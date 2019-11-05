@@ -7,6 +7,11 @@ import {AppContext} from './Contexts.js';
 import Storage from './src/storage/Storage.js';
 import { makeCancelablePromise } from './Constants.js';
 
+/**
+ * Entry UI component which is shown to the user when he/she opens the application.
+ * This component asks for the server domain which is then used throughout the application
+ * to communicate with the server.
+ */
 export default class EntryScreen extends Component{
 
 	constructor(props){
@@ -20,6 +25,7 @@ export default class EntryScreen extends Component{
 			domain: '',
 		};
 
+		// Array of all the async tasks(promises).
 		this.promises = [];
 
 		// Binding the functions to current object's context.
@@ -29,6 +35,9 @@ export default class EntryScreen extends Component{
 
 	static contextType = AppContext;
 
+	/**
+	 * Function to validate a url.
+	 */
 	validate(){
 		let urlRegEx = /.*/;
 		if (this.state.domain.length === 0){
@@ -49,6 +58,10 @@ export default class EntryScreen extends Component{
 		return true;
 	}
 
+	/**
+	 * Function which is called when user confirms a server url.
+	 * It first validates the url and then saves it in the local storage.
+	 */
 	onClickHandler(){
 		if (this.validate()){
 

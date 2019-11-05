@@ -8,6 +8,10 @@ import {Button, Input, Divider} from 'react-native-elements';
 import Camera from './Camera.js';
 import {makeCancelablePromise} from '../../../Constants.js';
 
+/**
+ * UI Component to take the roll no of a student before marking his/her attendance.
+ * This component applies to the faculties.
+ */
 export default class TakeAttendance extends Component{
     constructor(props){
 
@@ -22,17 +26,27 @@ export default class TakeAttendance extends Component{
             },
         };
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.takeAttendence = this.takeAttendence.bind(this);
         this.getBack = this.getBack.bind(this);
         this.validate = this.validate.bind(this);
     }
 
+    // Funtion which is called when the faculty proceeds to mark the attendance
+    // of the student after giving the student's roll no.
+    // Opens the camera.
     takeAttendence = () => {
         this.setState({
             openCamera: true,
         });
     };
 
+    /**
+     * The function which is called before the faculty submits
+     * the roll no and images of all the students to the server.
+     * Validates all the entered student credentials.
+     */
     validate(){
         if (this.state.RollNo.value.length === 0){
             this.setState({
@@ -47,18 +61,26 @@ export default class TakeAttendance extends Component{
         return true;
     }
 
-    // This function is not bound to the current context.
-    // It is expected since this.camera is defined in the Camera Component.
-
+    /**
+     * Function which is passed to the camera component.
+     * The camera component calls this function when a photo is snapped.
+     * This function is responsible to send the image to the server to mark the attendance.
+     * This function is not bound to the current context.
+     * It is expected since this.camera is defined in the Camera Component.
+     */
     async takePicture(){
+        // making sure that the camera context is set.
         if (this.camera) {
-            //console.log(image);
             this.setState({isLoading: true}, async () => {
+                // configuration for the camera.
                 const options = {quality: 0.25, base64: true};
                 const data = await this.camera.takePictureAsync(options);
+                // getting the base64 representation of the image.
                 let image = 'data:image/jpeg;base64,' + data.base64;
+
                 let attUrl = this.context.domain + '/api/service/' + this.context.id;
                 attUrl = attUrl + '/' + this.props.course.courseId + '/' + this.props.currentRollNo;
+
                 let cancFetch = makeCancelablePromise(fetch(attUrl, {
                     headers: {
                         'Authorization' : 'Bearer ' + this.context.token,
@@ -140,6 +162,9 @@ export default class TakeAttendance extends Component{
         }
     }
 
+    /**
+     * The function which is passed to other components which they can call to return back to this component.
+     */
     getBack(){
         this.setState({
             openCamera: false,

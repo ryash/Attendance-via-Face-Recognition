@@ -8,8 +8,18 @@ import {RNCamera} from 'react-native-camera';
 import {AppContext} from '../../../Contexts.js';
 import {Button} from 'react-native-elements';
 
+/**
+ * UI component for the camera, which is rendered when faculty wants to
+ * take attendance in any course.
+ * This component applies to the faculties.
+ */
 export default class Camera extends Component {
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(props){
@@ -36,6 +46,9 @@ export default class Camera extends Component {
         }
     }
 
+    /**
+     * Handler which is called when the user hits back button on his/her device
+     */
     handleBackButtonClick(){
         this.props.toggleCamera();
         return true;

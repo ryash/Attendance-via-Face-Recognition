@@ -11,8 +11,17 @@ import {AppContext} from '../../../Contexts.js';
 
 import MyCourses from './MyCourses.js';
 
-export default class AdminScreen extends Component {
+/**
+ * This class is the UI component for the screen shown to the students when they log in.
+ * This component applies to the students.
+ */
+export default class UserScreen extends Component {
 
+  /**
+   * Getting the current nearest context to get the data from.
+   * This context will have id and token of the faculty to authenticate him on the server
+   * along with other useful information.
+   */
   static contextType = AppContext;
 
   constructor(){
@@ -25,17 +34,25 @@ export default class AdminScreen extends Component {
       errorMessage: '',
     };
 
+    // Binding all the functions to current context so that they can be called
+    // from the context of other components as well.
     this.goBack = this.goBack.bind(this);
     this.onLogoutPress = this.onLogoutPress.bind(this);
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
 
   }
 
+  /**
+   * The handler which is called when user hits back button on his device.
+   */
   handleBackButtonClick(){
     this.goBack();
     return true;
   }
 
+  /**
+   * The handler which is called when the student opts to logout.
+   */
   onLogoutPress(){
     Storage.removeItem('user:id')
       .then(() => Storage.removeItem('user:token'))

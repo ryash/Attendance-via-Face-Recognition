@@ -3,8 +3,17 @@ import {BackHandler} from 'react-native';
 import { makeCancelablePromise } from '../../../Constants';
 import {AppContext} from '../../../Contexts.js';
 
+/**
+ * Utility component to load all the courses for a student/faculty.
+ * This component applies to the students/faculties.
+ */
 export default class Courses extends Component{
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(props){
@@ -18,6 +27,8 @@ export default class Courses extends Component{
             isLoading: true,
         };
 
+        // Keeps the list of all the asynchronous task,
+        // which may potentially change the component state after completion.
         this.promises = [];
 
     }

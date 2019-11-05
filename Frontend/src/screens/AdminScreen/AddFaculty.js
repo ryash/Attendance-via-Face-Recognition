@@ -10,7 +10,17 @@ import {Input, Divider, Header, Text, Button} from 'react-native-elements';
 import {AppContext} from '../../../Contexts.js';
 import {makeCancelablePromise} from '../../../Constants.js';
 
+/**
+ * UI Component to add a new faculty.
+ * This component applies to the faculties.
+ */
 export default class AddFaculty extends Component{
+
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(){
@@ -44,16 +54,25 @@ export default class AddFaculty extends Component{
         // Array of all the async tasks(promises).
         this.promises = [];
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.onProceedPress = this.onProceedPress.bind(this);
         this.validate = this.validate.bind(this);
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
 
+    /**
+     * Handler which is called when the user hits back button on his/her device
+     */
     handleBackButtonClick(){
         this.props.goBack();
         return true;
     }
 
+    /**
+     * The function which is called before the faculty submits all the faculty credentials.
+     * Validates all the entered faculty credentials.
+     */
     validate() {
         let emReg = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
@@ -141,6 +160,9 @@ export default class AddFaculty extends Component{
         BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
     }
 
+    /**
+     * Function which is called when faculty submits the faculty credentials to the server.
+     */
     onProceedPress(){
         if (this.validate()){
             this.setState({

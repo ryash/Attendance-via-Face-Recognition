@@ -1,9 +1,15 @@
+/**
+ * Different possible operating modes of the application
+ */
 export const modes = {
     USER: 0,
     ADMIN: 1,
     ANONYMOUS: 2,
 };
 
+/**
+ * Function to make any promise cancelable.
+ */
 export const makeCancelablePromise = (promise) => {
     let hasCanceled_ = false;
 

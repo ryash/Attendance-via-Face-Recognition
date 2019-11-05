@@ -9,8 +9,17 @@ import Storage from '../../storage/Storage.js';
 import {AppContext} from '../../../Contexts.js';
 import {modes, makeCancelablePromise} from '../../../Constants.js';
 
+/**
+ * UI Component to render the content for logging into the application as a student.
+ * This component applies to the students.
+ */
 export default class UserLoginScreen extends Component {
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(){
@@ -34,6 +43,8 @@ export default class UserLoginScreen extends Component {
         // Array of all the async tasks(promises).
         this.promises = [];
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.validate = this.validate.bind(this);
         this.onLoginPress = this.onLoginPress.bind(this);
 
@@ -46,6 +57,11 @@ export default class UserLoginScreen extends Component {
         }
     }
 
+    /**
+     * The function which is called before the student submits
+     * the login credentials to the server.
+     * Does Basic Validation of all the entered credentials.
+     */
     validate(){
 
         let isValid = true;
@@ -70,6 +86,9 @@ export default class UserLoginScreen extends Component {
         return isValid;
     }
 
+    /**
+     * The function which is called when the user submits the credentials to the server.
+     */
     onLoginPress(){
 
         // Primary validation of Email and Password.

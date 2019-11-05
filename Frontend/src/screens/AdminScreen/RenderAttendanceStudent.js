@@ -4,14 +4,25 @@ import {
     View,
     ActivityIndicator,
     BackHandler,
+    StyleSheet,
 } from 'react-native';
 
-import {Button, Text} from 'react-native-elements';
+import {Text} from 'react-native-elements';
 import { makeCancelablePromise } from '../../../Constants.js';
 import {AppContext} from '../../../Contexts.js';
+import { Table, Row } from 'react-native-table-component';
 
+/**
+ * UI Component to show the attendance record of a student in a particular course.
+ * This component applies to the faculties/students.
+ */
 export default class RenderAttendanceStudent extends Component {
 
+  /**
+   * Getting the current nearest context to get the data from.
+   * This context will have id and token of the faculty to authenticate him on the server
+   * along with other useful information.
+   */
   static contextType = AppContext;
 
   constructor(props){
@@ -25,8 +36,12 @@ export default class RenderAttendanceStudent extends Component {
       attendenceData: [],
     };
 
+    // Keeps the list of all the asynchronous task,
+    // which may potentially change the component state after completion.
     this.promises = [];
 
+    // Binding all the functions to current context so that they can be called
+    // from the context of other components as well.
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
 
@@ -39,60 +54,29 @@ export default class RenderAttendanceStudent extends Component {
       }
   }
 
+  /**
+   * Handler which is called when the user hits back button on his/her device
+   */
   handleBackButtonClick(){
       this.props.goBack();
       return true;
   }
 
-  renderAttendenceList(list, keys){
-    if (list.length === 0){
-      return (<Text> No Attendeance Data! </Text>);
-    }
-    return (<ScrollView style={{padding: 20}}>
-      {
-        <View style={{flex: 1, alignSelf: 'stretch', flexDirection: 'row' }}>
-          {
-            Object.getOwnPropertyNames(list[0]).map((val, ind) => {
-              return (<Text key={val}>
-                {val}
-              </Text>);
-            })
-          }
-        </View>
-      }
-      {
-        list.map((element, ind) => {
-          return this.renderRow(element, keys[ind]);
-        })
-      }
-      <Button
-        onPress={() => this.props.goBack()}
-        title="Back"
-      />
-    </ScrollView>);
-  }
-
-  renderRow(row, key) {
-    return (<View key={key} style={{flex: 1, alignSelf: 'stretch', flexDirection: 'row' }}>
-        {
-          Object.getOwnPropertyNames(row).map((val) => {
-            return (<Text key={row[val]}>
-              {row[val]}
-            </Text>);
-          })
-        }
-      </View>);
-  }
-
   render() {
 
-    let attendenceData = [], attKeys = [];
+    let attendenceData = [], attHeader = [], attendenceDataArray = [], attWidthArray = [];
 
     if (!this.state.isLoading && !this.state.hasError && this.state.attendenceData.length > 0){
       attendenceData = this.state.attendenceData;
 
-      attKeys = attendenceData.map((obj)=>{
-        return obj.Date;
+      attHeader = Object.getOwnPropertyNames(attendenceData[0]);
+
+      for (let itr = 0; itr < attHeader.length; itr++){
+        attWidthArray.push(189);
+      }
+
+      attendenceDataArray = attendenceData.map((row) => {
+        return Object.getOwnPropertyNames(row).map(val => row[val]);
       });
 
     }
@@ -105,7 +89,32 @@ export default class RenderAttendanceStudent extends Component {
           {this.state.errorMessage}
         </Text>
       </View> :
-      this.renderAttendenceList(attendenceData, attKeys)
+      attendenceData.length > 0 ?
+      <View style={styles.container}>
+        <ScrollView horizontal={true}>
+          <View>
+            <Table borderStyle={{borderColor: '#C1C0B9'}}>
+              <Row data={attHeader} widthArr={attWidthArray} style={styles.header} textStyle={styles.text}/>
+            </Table>
+            <ScrollView style={styles.dataWrapper}>
+              <Table borderStyle={{borderColor: '#C1C0B9'}}>
+                {
+                  attendenceDataArray.map((rowData, index) => (
+                    <Row
+                      key={index}
+                      data={rowData}
+                      widthArr={attWidthArray}
+                      style={[styles.row, index%2 && {backgroundColor: '#F7F6E7'}]}
+                      textStyle={styles.text}
+                    />
+                  ))
+                }
+              </Table>
+            </ScrollView>
+          </View>
+        </ScrollView>
+      </View> :
+      <Text> No Attendance Data </Text>
     );
   }
 
@@ -158,3 +167,11 @@ export default class RenderAttendanceStudent extends Component {
 
   }
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, paddingTop: 30, backgroundColor: '#fff' },
+  header: { height: 50, backgroundColor: '#537791' },
+  text: { textAlign: 'center', fontWeight: '100' },
+  dataWrapper: { marginTop: -1 },
+  row: { height: 40, backgroundColor: '#E7E6E1' },
+});

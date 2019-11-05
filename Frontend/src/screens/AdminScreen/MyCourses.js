@@ -2,7 +2,6 @@ import React from 'react';
 import {
   ScrollView,
   ActivityIndicator,
-  BackHandler,
 } from 'react-native';
 
 
@@ -11,8 +10,17 @@ import Courses from './Courses.js';
 import RenderCourseActions from './RenderCourseActions.js';
 import {AppContext} from '../../../Contexts.js';
 
+/**
+ * UI Component to show all the courses belonging to the relevant faculty.
+ * This component applies to the faculties.
+ */
 export default class MyCourses extends Courses {
 
+    /**
+     * Getting the current nearest context to get the data from.
+     * This context will have id and token of the faculty to authenticate him on the server
+     * along with other useful information.
+     */
     static contextType = AppContext;
 
     constructor(props){
@@ -24,22 +32,26 @@ export default class MyCourses extends Courses {
             renderCourseActions: false,
         });
 
+        // Binding all the functions to current context so that they can be called
+        // from the context of other components as well.
         this.goBack = this.goBack.bind(this);
         this.renderCourseActions = this.renderCourseActions.bind(this);
-        this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     }
 
+    /**
+     * The function which is passed to other components which they can call to return back to this component.
+     */
     goBack(){
         this.setState({
             renderCourseActions: false,
         });
     }
 
-    handleBackButtonClick(){
-        this.props.goBack();
-        return true;
-    }
-
+    /**
+     * Function which sets the context of the actions
+     * which are rendered when a button corresponding to some course is clicked.
+     * @param {Object} course - course object with fields, courseId, representing the course code and courseName, representing the course name.
+     */
     renderCourseActions(course){
         this.setState({
             currentCourse: course,
