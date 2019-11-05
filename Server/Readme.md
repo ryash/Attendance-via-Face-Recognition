@@ -9,6 +9,11 @@ API manual provides details about all the Rest API endpoints.
 For database we use PostgreSQL.
 Instructions for setting up database and server are provided in Installation.txt
 
+## ER Diagram:
+
+![Alt text](images/ER.png?raw=true "ER Diagram")
+
+
 ## Screenshots of database tables:
 
 ![Alt text](images/login.png?raw=true "Facultylogin and Studentlogin Tables")
