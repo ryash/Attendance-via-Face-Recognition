@@ -1,0 +1,202 @@
+The API provides follwoing route to request and send data.
+
+All routes are to be prefixed with url of the server.
+Routes 4-13 can be accessed by setting header "Autorization: Bearer token", token is the one returned by auth routes(1-3).
+Routes [1, 3, 9, 10] only can be accessed by a student, rest can be accessed by a faculty(including 3). 
+
+1). Route: /api/auth/signup/:role 
+    Method: 'POST'
+    Request Body: rollNo, name, email, password (all Strings)
+    Response: 
+    { 
+        Status Code: 200 
+        Json Object: id, name, email, token, isAdmin (all Strings)
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+2). Route: /api/auth/signup/faculty/:facultyId
+    Method: 'POST'
+    Request Body: name, email, password (all Strings)
+    Response: 
+    { 
+        Status Code: 200 
+        Json Object: id, name, email, token, isAdmin (all Strings)
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+    
+3). Route: /api/auth/signin/:role
+    Method: 'POST'
+    Request Body: if role is faculty, then -> email, password
+                  if role is student, then -> rollNo, password
+    Response: 
+    { 
+        Status Code: 200 
+        Json Object: id, name, email, token, isAdmin (all Strings)
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+    OR
+    {
+        Status Code: 400
+        Message: Invalid RollNo/Password or Email/Password
+    }
+
+4). Route: /api/service/course/:facultyId
+    Method: 'POST'
+    Request Body: courseName, courseId, attendanceCriteria(optional, if not provided 70% is default)
+    Response: 
+    { 
+        Status Code: 200 
+        Message: Course Created.
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+5). Route: /api/service/course/:facultyId/:courseId
+    Method: 'PUT'
+    Request Body: newAttendanceCriteria, courseName 
+    Response: 
+    { 
+        Status Code: 200 
+        Message: Attendance criteria updated.
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+6). Route: /api/service/course/:facultyId
+    Method: 'GET'
+    Request Body:
+    Response: 
+    { 
+        Status Code: 200 
+        message: Array of JSON objects having { courseId, courseName, attendanceCriteria }
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+7). Route: /api/service/register/:facultyId/:courseId
+    Method: 'POST'
+    Request Body: studentData : Array of JSON objects having { rollNo : rollno of the student, images: Array having images of the student in base64 string format }
+    Response: 
+    { 
+        Status Code: 200 
+        Message: Registered.
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+8). Route: /api/service/register/:facultyId/:courseId/:rollNo
+    Method: 'DELETE'
+    Request Body: 
+    Response: 
+    { 
+        Status Code: 200 
+        Message: rollNo is Unregistered.
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+9). Route: /api/user/:userId
+    Method: 'GET'
+    Request Body:
+    Response: 
+    { 
+        Status Code: 200 
+        message: Array of JSON objects having { courseName, courseId }
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+10). Route: /api/user/:userId/:courseId
+    Method: 'GET'
+    Query Params: perc=true, from=YYYY-MM-DD, toYYYY-MM-DD (to and from must be supplied together)
+    Request Body:
+    Response: 
+    { 
+        Status Code: 200 
+        message: Array of JSON objects having 
+        if perc=true is given in query params-> { rollNo, percentage, totalDays, daysAttended }
+        else { Date, Present: 'P' if student was present on Date else 'A' }
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+11). Route: /api/service/:facultyId/:courseId/:rollNo
+    Method: 'POST'
+    Request Body: image: Image of student to recognize to mark attendance
+    Response: 
+    { 
+        Status Code: 200 
+        message: rollNo has been marked present
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+12). Route: /api/service/:facultyId/:courseId/:rollNo
+    Method: 'GET'
+    Query Params: perc=true, from=YYYY-MM-DD, toYYYY-MM-DD (to and from must be supplied together)
+    Request Body:
+    Response: 
+    { 
+        Status Code: 200 
+        message: Array of JSON objects having 
+        if perc=true is given in query params-> { rollNo, percentage, totalDays, daysAttended }
+        else { Date, Present: 'P' if student was present on Date else 'A' }
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
+
+13). Route: /api/service/:facultyId/:courseId/
+    Method: 'GET'
+    Query Params: perc=true, from=YYYY-MM-DD, toYYYY-MM-DD (to and from must be supplied together)
+    Request Body:
+    Response: 
+    { 
+        Status Code: 200 
+        message: Array of JSON objects having 
+        if perc=true is given in query params-> { rollNo, percentage, totalDays, daysAttended }
+        else { RollNo, CourseId, Date, Present: 'P' if student was present on Date else 'A' }
+    } 
+    OR
+    {
+        Status Code: 404
+        Message: Some error message.
+    }
