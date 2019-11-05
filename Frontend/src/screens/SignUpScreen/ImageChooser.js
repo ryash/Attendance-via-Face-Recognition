@@ -10,8 +10,10 @@ import ImagePicker from 'react-native-image-picker';
 
 export default class ImageChooser extends Component{
 
-    constructor(){
-        super();
+    constructor(props){
+
+        super(props);
+
         this.state = {
             fileURI: '',
             fileBase64: '',
@@ -28,6 +30,7 @@ export default class ImageChooser extends Component{
                 skipBackup: true,
                 path: 'images',
             },
+            quality: 0.2,
         };
 
         ImagePicker.showImagePicker(options, (response) => {

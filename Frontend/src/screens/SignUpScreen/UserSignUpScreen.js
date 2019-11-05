@@ -166,6 +166,10 @@ export default class UserSignUpScreen extends Component {
                 cancFetch.promise.then(async (data)=>{
                     if (data.status === 200){
                         return data.json();
+                    } else if (data.headers['Content-Type'] !== 'application/json'){
+                        let err = new Error('Server uses unsupported data format');
+                        err.isCanceled = false;
+                        return Promise.reject(err);
                     } else {
                         let {error} = await data.json();
                         error.isCanceled = false;
@@ -206,10 +210,9 @@ export default class UserSignUpScreen extends Component {
 
     render() {
         return (
-            <ScrollView style={{padding: 20, backgroundColor: '#9900ff'}}>
+            <ScrollView>
                 <Header
-                    centerComponent = {{text: 'Register', color: '#f00'}}
-                    containerStyle = {{backgroundColor: '#0ff'}}
+                    centerComponent = {{text: 'Student Register', style: { color: '#fff', fontSize: 32, marginBottom: 20 }}}
                 />
                 <Divider />
                 {this.state.hasError ?
@@ -267,6 +270,8 @@ export default class UserSignUpScreen extends Component {
                     style={{backgroundColor: '#00ff00'}}
                     loading={this.state.isLoading ? true : false}
                     disabled={this.state.isLoading ? true : false}
+                    type="outline"
+                    containerStyle={{width: '80%' , marginLeft: '10%'}}
                 />
                 <View style={styles.verticalRightLayout}>
                     <Text
@@ -275,7 +280,16 @@ export default class UserSignUpScreen extends Component {
                             openSignUpPage: false,
                         })} >
                     Already Registered ? Login
-                </Text>
+                    </Text>
+                </View>
+                <View style={styles.verticalRightLayout}>
+                    <Text
+                        style={styles.switchLoginMode}
+                        onPress={() => this.context.changeAppState({
+                            openAdminPages: true,
+                        })} >
+                    Not a Student? Login as a faculty
+                    </Text>
                 </View>
             </ScrollView>
         );

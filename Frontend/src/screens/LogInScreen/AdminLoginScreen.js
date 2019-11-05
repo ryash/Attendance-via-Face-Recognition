@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import {
     ScrollView,
+    View,
 } from 'react-native';
-import {Input, Divider, Header, Text, Button} from 'react-native-elements';
+import {Input, Header, Text, Button} from 'react-native-elements';
 
 import Storage from '../../storage/Storage.js';
 import {AppContext} from '../../../Contexts.js';
@@ -13,7 +14,9 @@ export default class AdminLoginScreen extends Component {
     static contextType = AppContext;
 
     constructor(props){
+
         super(props);
+
         this.state = {
             Email: {
                 hasError: false,
@@ -74,6 +77,7 @@ export default class AdminLoginScreen extends Component {
 
         // Primary validation of Email and Password.
         if (this.validate()){
+
             this.setState({
                 isLoading: true,
             }, () => {
@@ -89,9 +93,13 @@ export default class AdminLoginScreen extends Component {
                     method: 'POST',
                 }));
 
-                cancFetch.promise.then(async (data)=>{
+                cancFetch.promise.then(async data => {
                     if (data.status === 200){
                         return data.json();
+                    } else if (data.headers['Content-Type'] !== 'application/json'){
+                        let err = new Error('Server uses unsupported data format');
+                        err.isCanceled = false;
+                        return Promise.reject(err);
                     }
 
                     let {error} = await data.json();
@@ -117,6 +125,7 @@ export default class AdminLoginScreen extends Component {
                         console.log('Failed to save admin id & token.\n Error: ' + err.message);
                     });
                 }).catch(err => {
+
                     if (!err.isCanceled){
                         this.setState({
                             hasError: true,
@@ -133,15 +142,13 @@ export default class AdminLoginScreen extends Component {
 
     render() {
         return (
-            <ScrollView style={{padding: 20}}>
+            <ScrollView style={{padding: 10}}>
                 <Header
-                    centerComponent = {{text: 'Log In', style: { color: '#fff' }}}
+                    centerComponent = {{text: 'Faculty Log In', style: { color: '#fff', fontSize: 32, marginBottom: 20 }}}
                 />
-                <Divider />
                 {this.state.hasError ?
                     <>
                         <Text style={{color: 'red'}}> {this.state.errorMessage} </Text>
-                        <Divider />
                     </> :
                     <></>
                 }
@@ -152,7 +159,6 @@ export default class AdminLoginScreen extends Component {
                     errorMessage={this.state.Email.hasError ? this.state.Email.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
                 <Input
                     placeholder="Password"
                     secureTextEntry={true}
@@ -161,16 +167,49 @@ export default class AdminLoginScreen extends Component {
                     errorMessage={this.state.Password.hasError ? this.state.Password.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     onPress={() => this.onLoginPress()}
                     title="Log In"
+                    loading={this.state.isLoading}
+                    disabled={this.state.isLoading}
                     type="outline"
-                    color="red"
-                    loading={this.state.isLoading ? true : false}
-                    disabled={this.state.isLoading ? true : false}
+                    containerStyle={{width: '80%' , marginLeft: '10%'}}
                 />
+                <View style={styles.verticalRightLayout}>
+                    <Text
+                        style={styles.switchLoginMode}
+                        onPress={() => this.context.changeAppState({
+                            openAdminPages: false,
+                            openSignUpPage: false,
+                        })} >
+                    Not a Faculty? Login As Student
+                    </Text>
+                </View>
+                <View style={styles.verticalRightLayout}>
+                    <Text
+                        style={styles.switchLoginMode}
+                        onPress={() => this.context.changeAppState({
+                            openSignUpPage: true,
+                            openAdminPages: false,
+                        })}>
+                    Or Register as Student
+                    </Text>
+                </View>
             </ScrollView>
         );
     }
 }
+
+let styles = {
+    switchLoginMode: {
+        fontSize: 16,
+        color: 'blue',
+        textAlign: 'right',
+        textDecorationLine: 'underline',
+        textDecorationStyle: 'solid',
+    },
+    verticalRightLayout:{
+        flexDirection: 'column',
+    },
+};

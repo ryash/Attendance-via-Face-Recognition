@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
 import {
-    Text,
-    TouchableOpacity,
     View,
-    Button,
     BackHandler,
 } from 'react-native';
 
 import {RNCamera} from 'react-native-camera';
 import {AppContext} from '../../../Contexts.js';
+import {Button} from 'react-native-elements';
 
 export default class Camera extends Component {
 
@@ -16,6 +14,10 @@ export default class Camera extends Component {
 
     constructor(props){
         super(props);
+
+        this.state = {
+            isLoading: false,
+        };
 
         this.promises = [];
 
@@ -58,11 +60,13 @@ export default class Camera extends Component {
             />
             <View
                 style={styles.capture}>
-                <TouchableOpacity
+                <Button
+                    title="Mark Attendence"
+                    loading={this.state.isLoading}
+                    disabled={this.state.isLoading}
                     onPress={this.props.takePicture.bind(this)}
-                    style={styles.capture}>
-                        <Text> Mark Attendence </Text>
-                </TouchableOpacity>
+                    style={styles.capture}
+                />
             </View>
             <Button
                 onPress={() => this.props.toggleCamera()}

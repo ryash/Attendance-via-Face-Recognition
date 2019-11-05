@@ -35,7 +35,7 @@ export default class AddStudent extends Component{
 
         let newArray = this.state.students.map((val) => {
 
-            rollNoSet.add(val.RollNo.value);
+            rollNoSet.add(val);
 
             if (val.RollNo.value.length === 0){
 
@@ -48,7 +48,7 @@ export default class AddStudent extends Component{
             if (val.images.length < 3){
 
                 val.RollNo.hasError = true;
-                val.RollNo.errorMessage = `Select ${3 - this.state.images.length} more images to continue`;
+                val.RollNo.errorMessage = `Select ${3 - val.images.length} more images to continue`;
 
                 isValid = false;
             }
@@ -89,15 +89,13 @@ export default class AddStudent extends Component{
         let subUrl = this.context.domain + '/api/service/register/' + this.context.id;
         subUrl = subUrl + '/' + this.props.course.courseId;
 
-        console.log(subUrl);
-
         if (this.validate()){
 
             let studentsStringified = JSON.stringify({
                 studentData: this.state.students.map((val) => {
                     return {
                         images: val.images,
-                        rollNo: val.RollNo.value,
+                        rollNo: val.RollNo.value.toUpperCase(),
                     };
                 }),
             });
@@ -119,6 +117,10 @@ export default class AddStudent extends Component{
                 .then(async data => {
                     if (data.status === 200){
                         return data.json();
+                    } else if (data.headers['Content-Type'] !== 'application/json'){
+                        let err = new Error('Server uses unsupported data format');
+                        err.isCanceled = false;
+                        return Promise.reject(err);
                     }
 
                     try {
@@ -202,7 +204,6 @@ export default class AddStudent extends Component{
                     return (
                         <View key={student.key}>
                             <Input
-                                editable={(ind < ((this.state.students.length) - 1)) ? false : true}
                                 placeholder="Roll No."
                                 onChangeText={(RollNo) => this.setState({students : this.state.students.map((value, index)=>{
                                     if (index === ind){
@@ -217,16 +218,9 @@ export default class AddStudent extends Component{
                                 errorStyle={{color: 'red'}}
                             />
                             <Divider />
-                            {
-                                (ind < ((this.state.students.length) - 1)) ?
-                                <></> :
-                                <>
-                                    <ImageChooser
-                                        setUserImage={this.setImage(ind)}
-                                    />
-                                    <Divider />
-                                </>
-                            }
+                            <ImageChooser
+                                setUserImage={this.setImage(ind)}
+                            />
                         </View>
                     );
                 })

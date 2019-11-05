@@ -162,6 +162,10 @@ export default class AddFaculty extends Component{
                 cancFetch.promise.then(async (data)=>{
                     if (data.status === 200){
                         return data.json();
+                    } else if (data.headers['Content-Type'] !== 'application/json'){
+                        let err = new Error('Server uses unsupported data format');
+                        err.isCanceled = false;
+                        return Promise.reject(err);
                     } else {
                         let {error} = await data.json();
                         error.isCanceled = false;

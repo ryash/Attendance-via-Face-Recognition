@@ -44,6 +44,10 @@ export default class Courses extends Component{
         cancFetch.promise.then(async res => {
             if (res.status === 200){
                 return res.json();
+            } else if (res.headers['Content-Type'] !== 'application/json'){
+                let err = new Error('Server uses unsupported data format');
+                err.isCanceled = false;
+                return Promise.reject(err);
             }
             else {
                 let {error} = await res.json();

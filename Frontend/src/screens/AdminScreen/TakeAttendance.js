@@ -52,80 +52,91 @@ export default class TakeAttendance extends Component{
 
     async takePicture(){
         if (this.camera) {
-            const options = {quality: 0.25, base64: true};
-            const data = await this.camera.takePictureAsync(options);
-            let image = 'data:image/jpeg;base64,' + data.base64;
-            let attUrl = this.context.domain + '/api/service/' + this.context.id;
-            attUrl = attUrl + '/' + this.props.course.courseId + '/' + this.props.currentRollNo;
-
             //console.log(image);
+            this.setState({isLoading: true}, async () => {
+                const options = {quality: 0.25, base64: true};
+                const data = await this.camera.takePictureAsync(options);
+                let image = 'data:image/jpeg;base64,' + data.base64;
+                let attUrl = this.context.domain + '/api/service/' + this.context.id;
+                attUrl = attUrl + '/' + this.props.course.courseId + '/' + this.props.currentRollNo;
+                let cancFetch = makeCancelablePromise(fetch(attUrl, {
+                    headers: {
+                        'Authorization' : 'Bearer ' + this.context.token,
+                        'Content-Type' : 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: image,
+                    }),
+                    method: 'POST',
+                }));
 
-            let cancFetch = makeCancelablePromise(fetch(attUrl, {
-                headers: {
-                    'Authorization' : 'Bearer ' + this.context.token,
-                    'Content-Type' : 'application/json',
-                },
-                body: JSON.stringify({
-                    image: image,
-                }),
-                method: 'POST',
-            }));
-
-            cancFetch.promise
-            .then(async res => {
-                if (res.status === 200){
-                    return res.json();
-                }
-                try {
-                    let pm1 = makeCancelablePromise(res.json());
-                    this.promises.push(pm1);
-                    let {error} = await pm1.promise;
-                    error.isCanceled = false;
-                    throw error;
-                } catch (err){
-                    return Promise.reject(err);
-                }
-            })
-            .then(body => {
-                Alert.alert('Notification',
-                    'Student marked present successfully',
-                    [
-                        {
-                            text: 'OK', onPress: () =>{
-                                this.props.toggleCamera();
+                cancFetch.promise
+                .then(async res => {
+                    if (res.status === 200){
+                        return res.json();
+                    } else if (data.headers['Content-Type'] !== 'application/json'){
+                        let err = new Error('Server uses unsupported data format');
+                        err.isCanceled = false;
+                        return Promise.reject(err);
+                    }
+                    try {
+                        let pm1 = makeCancelablePromise(res.json());
+                        this.promises.push(pm1);
+                        let {error} = await pm1.promise;
+                        error.isCanceled = false;
+                        throw error;
+                    } catch (err){
+                        return Promise.reject(err);
+                    }
+                })
+                .then(body => {
+                    Alert.alert('Notification',
+                        'Student marked present successfully',
+                        [
+                            {
+                                text: 'OK', onPress: () =>{
+                                    this.props.toggleCamera();
+                                },
                             },
-                        },
-                    ]
-                );
-            })
-            .catch(err => {
-                if (!err.isCanceled){
-                    if (err.message === 'Student not identified'){
-                        Alert.alert('Notification',
-                            `No Student Identified in the image. Make sure
-                            that you have decent lightning around you while snapping
-                            the image.`,
-                            [
-                                {
-                                    text: 'OK', onPress: () =>{},
-                                },
-                            ]
-                        );
+                        ]
+                    );
+                })
+                .catch(err => {
+                    if (!err.isCanceled){
+                        if (err.message === 'Student not identified'){
+                            Alert.alert('Notification',
+                                `No Student Identified in the image. Make sure
+                                that you have decent lightning around you while snapping
+                                the image.`,
+                                [
+                                    {
+                                        text: 'OK', onPress: () =>{
+                                            this.setState({
+                                                isLoading: false,
+                                            });
+                                        },
+                                    },
+                                ]
+                            );
+                        }
+                        else {
+                            Alert.alert('Notification',
+                                err.message,
+                                [
+                                    {
+                                        text: 'OK', onPress: () => {
+                                            this.setState({
+                                                isLoading: false,
+                                            });
+                                        },
+                                    },
+                                ]
+                            );
+                        }
                     }
-                    else {
-                        Alert.alert('Notification',
-                            err.message,
-                            [
-                                {
-                                    text: 'OK', onPress: () =>{},
-                                },
-                            ]
-                        );
-                    }
-                }
+                });
+                this.promises.push(cancFetch);
             });
-
-            this.promises.push(cancFetch);
         }
     }
 
