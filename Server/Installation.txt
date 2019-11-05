@@ -18,6 +18,7 @@ Step 8: you will be connected to database, there you can run queries to view dat
 
 Setting up Server:
 
-Step 0: Move into the Serve Folder and bring up the terminal.
-Step 1: run command 'npm install'
-Step 2: run command 'node index.js' Server will start listening on a PORT
+Step 0: Copy model folder from model branch of git repo into the Server folder, in the backend branch
+Step 1: Move into the Serve Folder and bring up the terminal.
+Step 2: run command 'npm install'
+Step 3: run command 'node index.js' Server will start listening on a PORT
