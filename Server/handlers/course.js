@@ -1,5 +1,10 @@
 const db = require("../db");
 
+/**
+ * Function that implements the functionality to create course.
+ * It accepts an optional parameter of attendanceCriteria,
+ * if not provided it makes it 70% by default.
+ */
 exports.createCourse = function(req, res, next){
     
 	try{
@@ -43,6 +48,11 @@ exports.createCourse = function(req, res, next){
 	}
 };
 
+/**
+ * Function that implements the functionality to change the attendance criteria for a course.
+ * Criteria can be changed only by the faculty offering that course.
+ * It accepts the new criteria and courseName
+ */
 exports.changeCriteria = function(req, res, next){
     
 	try{
@@ -77,6 +87,9 @@ exports.changeCriteria = function(req, res, next){
 	}
 };
 
+/**
+ * Function that implements the functionality to get all the courses taught by a faculty.
+ */
 exports.getCourses = function(req, res, next){
 	
 	try{

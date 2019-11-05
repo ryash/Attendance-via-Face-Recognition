@@ -13,10 +13,10 @@ const userRoutes = require("./routes/user");
 /**
  * PORT on which the server will listen.
  */
-const PORT = 8081;
+const PORT = process.env.PORT || 8081;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
 
 
 /**

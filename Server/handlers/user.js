@@ -1,5 +1,13 @@
 const db = require("../db");
 
+/**
+ * Function returns the attendance of the student in the course having courseId.
+ * 
+ * The optional query params:
+ * 	a). perc : if true, returns the percentage of the student in the course
+ * 
+ * 	b). from & to : specifies the range of date in which to check the attendance of the student 
+ */
 exports.getUserAttendance = function(req, res, next){
 
 	try{
@@ -111,6 +119,10 @@ exports.getUserAttendance = function(req, res, next){
 		});
 	}
 };
+
+/**
+ * Function returns courses that the student is registered in
+ */
 
 exports.getUserCourses = function(req, res, next){
 	

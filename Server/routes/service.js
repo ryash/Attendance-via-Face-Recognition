@@ -1,11 +1,26 @@
 const express = require("express");
 const router = express.Router();
-const { loginRequired, ensureCorrectUser, ensureCorrectCourse } = require("../middlewares/auth");
-const { markAttendance, markAttendanceAll, getAttendanceEnh, getAttendanceAllEnh } = require("../handlers/service");
+const { loginRequired, ensureCorrectUser, ensureCorrectCourse, ensureFaculty } = require("../middlewares/auth");
+const { markAttendance, getAttendanceEnh, getAttendanceAllEnh } = require("../handlers/service");
 
-router.post("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureCorrectCourse, markAttendance);
-router.post("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureCorrectCourse, markAttendanceAll);
-router.get("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendanceEnh);
-router.get("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureCorrectCourse, getAttendanceAllEnh);
+/**
+ *  Route to mark attendance of a single student.
+ */
+router.post("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureFaculty, ensureCorrectCourse, markAttendance);
+
+/**
+ *  Route to mark attendance of multiple students.
+ */
+// router.post("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureFaculty, ensureCorrectCourse, markAttendanceAll);
+
+/**
+ * Route to get attendance of a single student
+ */
+router.get("/:facultyId/:courseId/:rollNo", loginRequired, ensureCorrectUser, ensureFaculty, ensureCorrectCourse, getAttendanceEnh);
+
+/**
+ * Route to get attendance of multiple students.
+ */
+router.get("/:facultyId/:courseId/", loginRequired, ensureCorrectUser, ensureFaculty, ensureCorrectCourse, getAttendanceAllEnh);
 
 module.exports = router;

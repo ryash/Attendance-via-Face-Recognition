@@ -11,6 +11,7 @@ router.post("/signup/:role", signup);
 
 /**
  * Route for signing up faculty.
+ * It can be accessed only by an authenticated faculty
  */
 router.post("/signup/faculty/:facultyId", loginRequired, ensureCorrectUser, signupFaculty);
 

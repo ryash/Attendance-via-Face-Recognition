@@ -1,7 +1,20 @@
 const db = require("../db");
+const base64Img = require("base64-img");
+const {PythonShell} = require('python-shell');
 
+/**
+ * Function to mark attendance of a student in a course on the requesting day.
+ * 
+ * 
+ * It accepts an image of a student in base64 string format.
+ * It saves the image in the model's folder then runs the model to match if the image is associated
+ * with the rollNo it is sent for, if matched attendance is marked else error code is returned.
+ * 
+ * It also checks if the rollNo is registered in the course
+ * 
+ */
 exports.markAttendance = function(req, res, next){
-    
+
 	try{
 		let table = 'attendance';
 		
@@ -10,45 +23,87 @@ exports.markAttendance = function(req, res, next){
 		let rollNo = req.params.rollNo;
 		let courseId = req.params.courseId;
 
-		checkIfRegistered(courseId, rollNo)
-			.then(() => {
-				markDummyAttendance(courseId, next)
+		let { image } = req.body;
+
+		if(!saveImgToFolder(image, `${rollNo}`)){
+			return next({
+				status: 404
+				
+			});
+		}
+
+		//run model and mark attendance
+
+		var options = {
+            mode: 'text',
+            pythonPath: '/usr/bin/python3',
+            pythonOptions: ['-u'],
+            scriptPath: `${__dirname}/../model`,
+            args: [],
+            cwd: `${__dirname}/../model/`
+        };
+
+        PythonShell.run('face-recognition.py', options, function (err, results) {
+            if (err){ 
+                console.log(err);
+                throw err;
+            }
+            // Results is an array consisting of messages collected during execution
+			console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@results: ', results);
+
+			let rnum = '';
+			if(results.length > 0 && results[0] != 'None'){
+				rnum = elem.substring(0, 6); 
+			}
+
+			if(rnum == '' || rnum != rollNo){
+				console.log("COULD NOT MARK");
+				return next({
+					status: 404,
+					message: 'Student not recognized'
+				});
+			}
+			
+			checkIfRegistered(courseId, rollNo)
 				.then(() => {
-					const query = `INSERT INTO ${table}(rollno, course_id, attenddate) VALUES($1,$2,$3)`;
-					const values = [rollNo, courseId, attendDate];
-	
-					db.query(query, values)
-						.then((result) => {
-							let message = `${rollNo} has been marked present`;
-							return res.status(200).json({
-								message
-							});
-						})
-						.catch(err => {
-							if(err.code == 23505){
-								return next({
-									status: 404,
-									message: `${rollNo} already marked present`
+					markDummyAttendance(courseId, next)
+					.then(() => {
+						const query = `INSERT INTO ${table}(rollno, course_id, attenddate) VALUES($1,$2,$3)`;
+						const values = [rollNo, courseId, attendDate];
+		
+						db.query(query, values)
+							.then((result) => {
+								let message = `${rollNo} has been marked present`;
+								return res.status(200).json({
+									message
 								});
-							}
-							console.log(err);
-							return next({
-								status: 404
-								
+							})
+							.catch(err => {
+								if(err.code == 23505){
+									return next({
+										status: 404,
+										message: `${rollNo} already marked present`
+									});
+								}
+								console.log(err);
+								return next({
+									status: 404
+									
+								});
 							});
+					})
+					.catch(err => {
+						return next({
+							status: 404
+		
 						});
+					});
 				})
 				.catch(err => {
 					return next({
-						status: 404
-	
+						status: 404,
+						message: `${rollNo} not registered`
 					});
-				});
-			})
-			.catch(err => {
-				return next({
-					status: 404,
-					message: `${rollNo} not registered`
 				});
 			});
 	}
@@ -60,67 +115,98 @@ exports.markAttendance = function(req, res, next){
 	}
 };
 
-exports.markAttendanceAll = function(req, res, next){
-    
-	try{
-		let table = 'attendance';
+/**
+ * Function to save images of student in images folder for model to train on it.
+ * 
+ * It accepts base64 string of the image and converts it to image format and saves it in images folder
+ */
+function saveImgToFolder(base64Url, fileName) {
+    let flag = true;
+    base64Img.img(base64Url, __dirname + '/../model/Attend_Images', fileName, (err, filepath) => {
+        if(err){
+            flag = false;
+        }
+    });
+    return flag;
+}
+
+/**
+ * Function to mark attendance of multiple students in a course on the requesting day.
+ * 
+ * 
+ * It accepts an images of the students in base64 string format.
+ * It saves the image in the model's folder then runs the model to match if the image is associated
+ * with the rollNo it is sent for, if matched attendance is marked else error code is returned.
+ * 
+ * It also checks if the rollNo is registered in the course
+ * 
+ */
+// exports.markAttendanceAll = function(req, res, next){
+
+// 	try{
+// 		let table = 'attendance';
 		
-		let attendDate = new Date();
-		attendDate = `${attendDate.getFullYear()}-${attendDate.getMonth() + 1}-${attendDate.getDate()}`; 
-		let courseId = req.params.courseId;
+// 		let attendDate = new Date();
+// 		attendDate = `${attendDate.getFullYear()}-${attendDate.getMonth() + 1}-${attendDate.getDate()}`; 
+// 		let courseId = req.params.courseId;
 
-		markDummyAttendance(courseId, next)
-			.then(() => {
-				let { rollNos } = req.body;
-				let query = `INSERT INTO ${table}(rollno, course_id, attenddate) VALUES`;
+// 		//Run the model and check attendance
 
-				let values = [];
-				for (let i = 0; i < rollNos.length; i++){
-					let j = 3 * i; 
-					if(i == rollNos.length - 1){
-						query += `($${j + 1}, $${j+2}, $${j+3})`;
-						values.push(rollNos[i]);
-						values.push(courseId);
-						values.push(attendDate);
-						break;
-					}
-					query += `($${j + 1}, $${j+2}, $${j+3}),`;
-					values.push(rollNos[i]);
-					values.push(courseId);
-					values.push(attendDate);
-				}
+// 		markDummyAttendance(courseId, next)
+// 			.then(() => {
+// 				let { rollNos } = req.body;
+// 				let query = `INSERT INTO ${table}(rollno, course_id, attenddate) VALUES`;
 
-				db.query(query, values)
-					.then((result) => {
-						let message = `Marked present`;
-						return res.status(200).json({
-							message
-						});
-					})
-					.catch(err => {
-						console.log(err);
-						return next({
-							status: 404
+// 				let values = [];
+// 				for (let i = 0; i < rollNos.length; i++){
+// 					let j = 3 * i; 
+// 					if(i == rollNos.length - 1){
+// 						query += `($${j + 1}, $${j+2}, $${j+3})`;
+// 						values.push(rollNos[i]);
+// 						values.push(courseId);
+// 						values.push(attendDate);
+// 						break;
+// 					}
+// 					query += `($${j + 1}, $${j+2}, $${j+3}),`;
+// 					values.push(rollNos[i]);
+// 					values.push(courseId);
+// 					values.push(attendDate);
+// 				}
+
+// 				db.query(query, values)
+// 					.then((result) => {
+// 						let message = `Marked present`;
+// 						return res.status(200).json({
+// 							message
+// 						});
+// 					})
+// 					.catch(err => {
+// 						console.log(err);
+// 						return next({
+// 							status: 404
 							
-						});
-					});
-			})
-			.catch(err => {
-				return next({
-					status: 404
+// 						});
+// 					});
+// 			})
+// 			.catch(err => {
+// 				return next({
+// 					status: 404
 
-				});
-			});
+// 				});
+// 			});
 
-	}
-	catch(err){
-		return next({
-			status: 404,
-			message: err.message
-		});
-	}
-};
+// 	}
+// 	catch(err){
+// 		return next({
+// 			status: 404,
+// 			message: err.message
+// 		});
+// 	}
+// };
 
+/**
+ * Function that runs the query on database to check if the rollNo is registered in the course
+ */
 function checkIfRegistered(courseId, rollNo){
 	try{
 		let table = 'attendance';
@@ -152,6 +238,10 @@ function checkIfRegistered(courseId, rollNo){
 	}
 }
 
+/**
+ * It marks the a dummy attedance to keep track of the dates on which
+ * class for the course took place to provide attendance details about a student
+ */
 function markDummyAttendance(courseId, next){
 	try{
 		let table = 'attendance';
@@ -184,6 +274,16 @@ function markDummyAttendance(courseId, next){
 	}
 };
 
+/**
+ * Function returns the attendance of a student in the course having courseId.
+ * 
+ * The optional query params:
+ * 	a). perc : if true, returns the percentage of the student in the course
+ * 
+ * 	b). from & to : specifies the range of date in which to check the attendance of the student 
+ * 
+ * 	It take helps of dummy attendance to get record of all the dates that classes have been taken.
+ */
 exports.getAttendanceEnh = function(req, res, next){
     
 	try{
@@ -296,6 +396,16 @@ exports.getAttendanceEnh = function(req, res, next){
 	}
 };
 
+/**
+ * Function returns the attendance of all student in the course having courseId.
+ * 
+ * The optional query params:
+ * 	a). perc : if true, returns the percentage of the student in the course
+ * 
+ * 	b). from & to : specifies the range of date in which to check the attendance of the student 
+ * 
+ * 	It take helps of dummy attendance to get record of all the dates that classes have been taken.
+ */
 exports.getAttendanceAllEnh = function(req, res, next){
 	try{
 		let table = 'attendance';

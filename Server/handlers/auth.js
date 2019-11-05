@@ -3,6 +3,12 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 let tableRoles = ['facultyLogin','studentLogin'];
 
+/**
+ *  Function that checks the validitity of email and password.
+ * 	Returns:
+ *  	success code, if the user is verified along with a token that maintains state about user.
+ * 		error code, if the user could not be verified.
+ */
 exports.signin = async function(req, res, next){
     
 	try{
@@ -66,9 +72,7 @@ exports.signin = async function(req, res, next){
 		else if(req.params.role == 'student'){
 			let table = tableRoles[1];
 			let {rollNo, password: pass} = req.body;
-			// if(!validateEmail(email)){
-			// 	throw Error("Invalid Email");
-			// }
+
 			const query = `SELECT RollNo, email, name, password FROM ${table} WHERE rollno=$1`;
 			const values = [rollNo];
 
@@ -130,6 +134,12 @@ exports.signin = async function(req, res, next){
 	}
 };
 
+/**
+ *  Function that enrolls the student with his rollNo, name, email, password.
+ * 	Returns:
+ *  	success code, if the user is enrolled along with a token that maintains state about user.
+ * 		error code, if the user could not be enrolled.
+ */
 exports.signup = async function(req, res, next){
 
 	try{
@@ -185,6 +195,12 @@ exports.signup = async function(req, res, next){
 	}	
 };
 
+/**
+ *  Function that enrolls the faculty with his name, email, password.
+ * 	Returns:
+ *  	success code, if the faculty is enrolled along with a token that maintains state about user.
+ * 		error code, if the faculty could not be enrolled.
+ */
 exports.signupFaculty = async function(req, res, next){
 
 	try{
@@ -235,7 +251,9 @@ exports.signupFaculty = async function(req, res, next){
 	}	
 };
 
-
+/**
+ * checks the validity of an email using a regex
+ */
 function validateEmail(sEmail) {
 	var reEmail = /^(?:[\w\!\#\$\%\&\'\*\+\-\/\=\?\^\`\{\|\}\~]+\.)*[\w\!\#\$\%\&\'\*\+\-\/\=\?\^\`\{\|\}\~]+@(?:(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-](?!\.)){0,61}[a-zA-Z0-9]?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9\-](?!$)){0,61}[a-zA-Z0-9]?)|(?:\[(?:(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\.){3}(?:[01]?\d{1,2}|2[0-4]\d|25[0-5])\]))$/;
   

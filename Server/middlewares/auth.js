@@ -112,3 +112,35 @@ exports.ensureCorrectCourse = function(req, res, next) {
 		});
 	}
 };
+
+
+/**
+ * Function(middleware) to check if the requesting user is a faculty.
+ * 
+ * Token in the Authorization header is used to verify
+ *  and 
+ * decoded isAdmin string be true.
+ */
+exports.ensureFaculty = function(req, res, next) {
+
+	try {
+		const token = req.headers.authorization.split(" ")[1];
+		let id;
+
+		jwt.verify(token, process.env.SECRET_KEY, function(err, decoded) {
+			if(decoded && decoded.isAdmin == true) {
+				return next();
+			} else{
+				return next({
+					status: 401,
+					message: "Unauthorized"
+				});
+			}
+		});
+	} catch(e){
+		return next({
+			status: 401,
+			message: "Unauthorized"
+		});
+	}
+};
