@@ -3,9 +3,10 @@ import {
     ScrollView,
     Alert,
     BackHandler,
+    View,
 } from 'react-native';
 
-import {Input, Divider, Header, Text, Button} from 'react-native-elements';
+import {Input, Header, Text, Button} from 'react-native-elements';
 
 import {AppContext} from '../../../Contexts.js';
 import {makeCancelablePromise} from '../../../Constants.js';
@@ -221,16 +222,15 @@ export default class AddFaculty extends Component{
 
     render() {
         return (
-            <ScrollView style={{padding: 20, backgroundColor: '#9900ff'}}>
+            <ScrollView style={{padding: 20}}>
                 <Header
-                    centerComponent = {{text: 'Add Faculty', color: '#f00'}}
-                    containerStyle = {{backgroundColor: '#0ff'}}
+                    centerComponent = {{text: 'Add Faculty', color: '#fff', style:{fontSize: 40, marginBottom: 20}}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 {this.state.hasError ?
                     <>
                         <Text style={{color: 'red'}}> {this.state.errorMessage} </Text>
-                        <Divider />
+                        <View style={{margin: 7}} />
                     </> :
                     <></>
                 }
@@ -241,7 +241,7 @@ export default class AddFaculty extends Component{
                     errorMessage={this.state.Name.hasError ? this.state.Name.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Input
                     placeholder="Email"
                     onChangeText={(Email) => this.setState({Email : { hasError: false, value: Email }})}
@@ -249,7 +249,7 @@ export default class AddFaculty extends Component{
                     errorMessage={this.state.Email.hasError ? this.state.Email.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Input
                     placeholder="Password"
                     secureTextEntry={true}
@@ -258,7 +258,7 @@ export default class AddFaculty extends Component{
                     errorMessage={this.state.Password.hasError ? this.state.Password.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Input
                     placeholder="Confirm Password"
                     secureTextEntry={true}
@@ -267,21 +267,26 @@ export default class AddFaculty extends Component{
                     errorMessage={this.state.CnfPassword.hasError ? this.state.CnfPassword.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     onPress={() => this.onProceedPress()}
                     title="Add Faculty"
                     style={{backgroundColor: '#00ff00'}}
                     loading={this.state.isLoading ? true : false}
                     disabled={this.state.isLoading ? true : false}
+                    icon={{type: 'material-icons', name: 'add-circle-outline'}}
+                    type="outline"
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     onPress={() => this.props.goBack()}
                     title="Back"
                     style={{backgroundColor: '#00ff00'}}
                     loading={this.state.isLoading ? true : false}
                     disabled={this.state.isLoading ? true : false}
+                    icon={{type: 'antdesign', name: 'left', iconStyle: {left: '-600%'}}}
+                    type="outline"
+                    titleStyle={{left: '500%'}}
                 />
             </ScrollView>
         );

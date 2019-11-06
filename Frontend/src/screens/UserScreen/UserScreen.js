@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {
-  ScrollView,
+  ScrollView, View,
 } from 'react-native';
 
 import {Button} from 'react-native-elements';
@@ -93,12 +93,19 @@ export default class UserScreen extends Component {
       <Button
         title = "My Courses"
         onPress={() => {this.setState({renderCourses: true});}}
-        titleStyle={{color: 'red'}}
+        icon={{type: 'antdesign', name: 'right', iconStyle: {left: '500%'}}}
+        type="outline"
+        iconRight
+        titleStyle={{left: '-460%'}}
       />
+      <View style={{margin: 7}} />
       <Button
           onPress={() => this.onLogoutPress()}
           title="Logout"
-          titleStyle={{color: 'red'}}
+          icon={{type: 'antdesign', name: 'logout', iconStyle: {left: '560%'}}}
+          type="outline"
+          iconRight
+          titleStyle={{left: '-540%'}}
       />
     </ScrollView>);
   }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { BackHandler, ScrollView, Alert, View } from 'react-native';
-import { Button, Divider, Input, Text } from 'react-native-elements';
+import { Button, Input, Text } from 'react-native-elements';
 
 import { makeCancelablePromise } from '../../../Constants.js';
 import { AppContext } from '../../../Contexts.js';
@@ -254,10 +254,11 @@ export default class AddStudent extends Component{
                                 errorMessage={this.state.students[ind].RollNo.hasError ? this.state.students[ind].RollNo.errorMessage : undefined}
                                 errorStyle={{color: 'red'}}
                             />
-                            <Divider />
+                            <View style={{margin: 7}} />
                             <ImageChooser
                                 setUserImage={this.setImage(ind)}
                             />
+                            <View style={{margin: 7}} />
                         </View>
                     );
                 })
@@ -269,12 +270,18 @@ export default class AddStudent extends Component{
                 }}
                 title="Add New Student"
                 onPress = {() => this.addNewStudent()}
+                type="outline"
             />
+            <View style={{margin: 7}} />
             <Button
                 title="Add Students"
                 onPress={() => this.addStudent()}
                 loading={this.state.isLoading}
                 disabled={this.state.isLoading}
+                icon={{type: 'material-icons', name: 'add-circle-outline', iconStyle: {left: '450%'}}}
+                type="outline"
+                iconRight
+                titleStyle={{left: '-400%'}}
             />
         </ScrollView>);
     }

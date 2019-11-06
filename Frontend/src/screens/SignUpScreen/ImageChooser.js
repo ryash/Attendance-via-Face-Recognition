@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import {
     View,
-    Button,
     StyleSheet,
-    Image,
+    ScrollView,
 } from 'react-native';
+
+import {Button, Image} from 'react-native-elements';
 
 /**
  * UI Component to show an image picker when the faculty is enrolling a student in some course.
@@ -70,7 +71,7 @@ export default class ImageChooser extends Component{
     }
 
     render(){
-        return (<>
+        return (<ScrollView>
             <View>
                 {this.state.fileBase64 !== '' ?
                     <>
@@ -78,20 +79,24 @@ export default class ImageChooser extends Component{
                             source={{uri: this.state.fileBase64, height: 20, width: 20}}
                             style = {styles.images}
                         />
+                        <View style={{margin:7}} />
                         <Button
                             title = "Confirm This Image"
                             onPress = {this.confirmImage}
+                            type="outline"
                         />
+                        <View style={{margin:7}} />
                     </> :
                     <></>
                 }
-                <View style={{margin:7}} />
                 <Button
                     title = "Choose Image"
                     onPress = {this.chooseImage}
+                    type="outline"
+                    icon={{type:'antdesign', name: 'select1'}}
                 />
             </View>
-        </>);
+        </ScrollView>);
     }
 
     componentWillUnmount(){

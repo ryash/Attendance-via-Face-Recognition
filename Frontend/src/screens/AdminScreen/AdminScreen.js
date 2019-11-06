@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {
   ScrollView,
+  View,
 } from 'react-native';
 
 import {Button} from 'react-native-elements';
@@ -116,18 +117,37 @@ export default class AdminScreen extends Component {
           <Button
             onPress={() => this.setState({openMyCourses: true})}
             title="My Courses"
+            icon={{type: 'antdesign', name: 'right', iconStyle: {left: '525%'}}}
+            type="outline"
+            iconRight
+            titleStyle={{left: '-470%'}}
           />
+          <View style={{margin: 7}} />
           <Button
             onPress = {()=>{this.setState({addNewCourse: true});}}
             title="Add New Course"
+            icon={{type: 'antdesign', name: 'right', iconStyle: {left: '450%'}}}
+            type="outline"
+            iconRight
+            titleStyle={{left: '-400%'}}
           />
+          <View style={{margin: 7}} />
           <Button
             onPress={() => this.setState({addFaculty: true})}
             title="Add New Faculty"
+            icon={{type: 'antdesign', name: 'right', iconStyle: {left: '450%'}}}
+            type="outline"
+            iconRight
+            titleStyle={{left: '-400%'}}
           />
+          <View style={{margin: 7}} />
           <Button
             onPress={() => this.onLogoutPress()}
             title="Logout"
+            icon={{type: 'antdesign', name: 'logout', iconStyle: {left: '560%'}}}
+            type="outline"
+            iconRight
+            titleStyle={{left: '-540%'}}
           />
           </ScrollView>
       );

@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ScrollView,
   ActivityIndicator,
+  View,
 } from 'react-native';
 
 import {Button, Divider, Text} from 'react-native-elements';
@@ -60,27 +61,39 @@ export default class MyCourses extends Courses{
 
     render(){
         return (
-            this.state.isLoading ? <ActivityIndicator/> :
+            this.state.isLoading ?
+            <ActivityIndicator
+                size="large"
+                color="#bc2b78"
+                style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}
+            /> :
             this.state.hasError ? <Text style={{color: 'red'}}> {this.state.errorMessage} </Text> :
             this.state.renderAttendance ?
             <RenderAttendanceStudent
                 goBack={this.goBack}
                 url={this.context.domain + '/api/user/' + this.context.id + '/' + this.state.currentCourse.courseId}
             /> :
-            <ScrollView>
+            <ScrollView style={{padding: 20}}>
                 {this.state.allCourses.map((val)=>{
                     return (
+                        <View key = {val.courseId}>
                             <Button
-                                key = {val.courseId}
                                 onPress={() => this.renderAttendance(val)}
                                 title = {val.courseId + ': ' + val.courseName}
+                                icon={{type: 'antdesign', name: 'right'}}
+                                type="outline"
+                                iconRight
                             />
-                        );
+                            <View style={{margin: 7}} />
+                        </View>
+                    );
                 })}
-                <Divider />
                 <Button
                     title="Back"
                     onPress={() => this.props.goBack()}
+                    icon={{type: 'antdesign', name: 'left', iconStyle: {left: '-600%'}}}
+                    type="outline"
+                    titleStyle={{left: '500%'}}
                 />
             </ScrollView>
         );

@@ -78,13 +78,12 @@ export default class Camera extends Component {
                     loading={this.state.isLoading}
                     disabled={this.state.isLoading}
                     onPress={this.props.takePicture.bind(this)}
-                    style={styles.capture}
+                    buttonStyle={styles.capture}
                 />
             </View>
             <Button
                 onPress={() => this.props.toggleCamera()}
                 title="Close Camera"
-                style={styles.capture}
             />
             </View>
         );
