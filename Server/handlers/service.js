@@ -49,10 +49,10 @@ exports.markAttendance = function(req, res, next){
                 throw err;
             }
             // Results is an array consisting of messages collected during execution
-			console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@results: ', results);
+// 			console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@results: ', results);
 
 			let rnum = '';
-			if(results.length > 0 && results[0] != 'None'){
+			if(results && results.length > 0 && results[0] != 'None'){
 				rnum = results[0].substring(0, 6); 
 			}
 
