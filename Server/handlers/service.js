@@ -1,5 +1,6 @@
 const db = require("../db");
 const base64Img = require("base64-img");
+const rimraf = require('rimraf');
 const {PythonShell} = require('python-shell');
 
 /**
@@ -55,6 +56,11 @@ exports.markAttendance = function(req, res, next){
 			if(results && results.length > 0 && results[0] != 'None'){
 				rnum = results[0].substring(0, 6); 
 			}
+		
+		//Clear Attend_Images Folder.
+			rimraf(__dirname + '/../model/Attend_Images/*.*', function () {
+				console.log("Cleared Images"); 
+			});
 
 			if(rnum == '' || rnum != rollNo){
 				console.log("COULD NOT MARK");
