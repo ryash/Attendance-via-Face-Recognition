@@ -3,7 +3,7 @@ import {
     ScrollView,
     View,
 } from 'react-native';
-import {Input, Divider, Header, Text, Button} from 'react-native-elements';
+import {Input, Header, Text, Button} from 'react-native-elements';
 
 import Storage from '../../storage/Storage.js';
 import {AppContext} from '../../../Contexts.js';
@@ -233,11 +233,11 @@ export default class UserSignUpScreen extends Component {
                 <Header
                     centerComponent = {{text: 'Student Register', style: { color: '#fff', fontSize: 32, marginBottom: 20 }}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 {this.state.hasError ?
                     <>
                         <Text style={{color: 'red'}}> {this.state.errorMessage} </Text>
-                        <Divider />
+                        <View style={{margin: 7}} />
                     </> :
                     <></>
                 }
@@ -248,7 +248,7 @@ export default class UserSignUpScreen extends Component {
                     errorMessage={this.state.Name.hasError ? this.state.Name.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Input
                     placeholder="Email"
                     onChangeText={(Email) => this.setState({Email : { hasError: false, value: Email }})}
@@ -256,7 +256,7 @@ export default class UserSignUpScreen extends Component {
                     errorMessage={this.state.Email.hasError ? this.state.Email.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Input
                     placeholder="Roll No."
                     onChangeText={(RollNo) => this.setState({RollNo : { hasError: false, value: RollNo }})}
@@ -264,7 +264,7 @@ export default class UserSignUpScreen extends Component {
                     errorMessage={this.state.RollNo.hasError ? this.state.RollNo.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Input
                     placeholder="Password"
                     secureTextEntry={true}
@@ -273,7 +273,7 @@ export default class UserSignUpScreen extends Component {
                     errorMessage={this.state.Password.hasError ? this.state.Password.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Input
                     placeholder="Confirm Password"
                     secureTextEntry={true}
@@ -282,7 +282,7 @@ export default class UserSignUpScreen extends Component {
                     errorMessage={this.state.CnfPassword.hasError ? this.state.CnfPassword.errorMessage : undefined}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     onPress={() => this.onProceedPress()}
                     title="Proceed"

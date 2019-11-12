@@ -2,9 +2,10 @@ import React, {Component} from 'react';
 import {
   ScrollView,
   Alert,
+  View
 } from 'react-native';
 
-import {Button, Input, Divider} from 'react-native-elements';
+import {Button, Input} from 'react-native-elements';
 import Camera from './Camera.js';
 import {makeCancelablePromise} from '../../../Constants.js';
 
@@ -180,7 +181,7 @@ export default class TakeAttendance extends Component{
                 currentRollNo={this.state.RollNo.value}
                 takePicture={this.takePicture}
             /> :
-            <ScrollView>
+            <ScrollView style={{padding: 20}}>
                 <Input
                     placeholder = "Roll No."
                     onChangeText={(RollNo) => {
@@ -195,7 +196,7 @@ export default class TakeAttendance extends Component{
                     errorMessage={this.state.RollNo.errorMessage}
                     errorStyle={{color: 'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     title="Mark Attendance"
                     onPress={() => {
@@ -205,11 +206,18 @@ export default class TakeAttendance extends Component{
                             });
                         }
                     }}
+                    icon={{type: 'antdesign', name: 'right', iconStyle: {left: '450%'}}}
+                    type="outline"
+                    iconRight
+                    titleStyle={{left: '-400%'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     title="Back"
                     onPress={()=>this.props.goBack()}
+                    icon={{type: 'antdesign', name: 'left', iconStyle: {left: '-600%'}}}
+                    type="outline"
+                    titleStyle={{left: '500%'}}
                 />
             </ScrollView>
         );

@@ -93,7 +93,11 @@ export default class RenderAttendanceCourse extends Component {
     });
 
     return (this.state.isLoading ?
-      <ActivityIndicator /> :
+      <ActivityIndicator
+        size="large"
+        color="#bc2b78"
+        style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}
+      /> :
       this.state.renderStudentAttendance ?
       <RenderAttendanceStudent
         goBack={this.goBack}

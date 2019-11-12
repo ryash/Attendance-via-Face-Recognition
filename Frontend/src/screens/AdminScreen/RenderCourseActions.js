@@ -2,10 +2,11 @@ import React, {Component} from 'react';
 import {
   ScrollView,
   BackHandler,
+  View,
 } from 'react-native';
 
 
-import {Button, Divider} from 'react-native-elements';
+import {Button} from 'react-native-elements';
 import AddStudent from './AddStudent.js';
 import TakeAttendance from './TakeAttendance.js';
 import RenderAttendanceCourse from './RenderAttendanceCourse.js';
@@ -75,7 +76,7 @@ export default class RenderCourseActions extends Component{
                 goBack={this.goBack}
                 course={this.props.course}
             /> :
-            <ScrollView>
+            <ScrollView style={{padding: 20}}>
                 <Button
                     title="Take Attendance"
                     onPress={() => {
@@ -83,8 +84,12 @@ export default class RenderCourseActions extends Component{
                             takeAttendance: true,
                         });
                     }}
+                    icon={{type: 'antdesign', name: 'right', iconStyle: {left: '450%'}}}
+                    type="outline"
+                    iconRight
+                    titleStyle={{left: '-400%'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     title="See Attendance"
                     onPress={() => {
@@ -92,8 +97,12 @@ export default class RenderCourseActions extends Component{
                             renderCourseAttendance: true,
                         });
                     }}
+                    icon={{type: 'antdesign', name: 'right', iconStyle: {left: '460%'}}}
+                    type="outline"
+                    iconRight
+                    titleStyle={{left: '-400%'}}
                 />
-                <Divider />
+                <View style={{margin: 7}} />
                 <Button
                     title="Add Student"
                     onPress={() => {
@@ -101,6 +110,10 @@ export default class RenderCourseActions extends Component{
                             addStudent: true,
                         });
                     }}
+                    icon={{type: 'antdesign', name: 'right', iconStyle: {left: '500%'}}}
+                    type="outline"
+                    iconRight
+                    titleStyle={{left: '-450%'}}
                 />
             </ScrollView>
         );

@@ -3,9 +3,10 @@ import {
     ScrollView,
     BackHandler,
     Alert,
+    View,
 } from 'react-native';
 
-import { Input, Button, Divider, Text } from 'react-native-elements';
+import { Input, Button, Text } from 'react-native-elements';
 
 import {AppContext} from '../../../Contexts.js';
 import { makeCancelablePromise } from '../../../Constants.js';
@@ -187,7 +188,7 @@ export default class AddCourse extends Component {
                     errorMessage={this.state.CourseCode.hasError ? this.state.CourseCode.errorMessage : undefined}
                     errorStyle={{color:'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}}/>
                 <Input
                     placeholder="Course Name"
                     onChangeText={(CourseName) => this.setState({CourseName: {
@@ -198,17 +199,22 @@ export default class AddCourse extends Component {
                     errorMessage={this.state.CourseName.hasError ? this.state.CourseName.errorMessage : undefined}
                     errorStyle={{color:'red'}}
                 />
-                <Divider />
+                <View style={{margin: 7}}/>
                 <Button
                     title="Add"
                     onPress={()=>this.addCourse()}
                     loading={this.state.isLoading ? true : false}
                     disabled={this.state.isLoading ? true : false}
+                    icon={{type: 'material-icons', name: 'add-circle-outline'}}
+                    type="outline"
                 />
-                <Divider />
+                <View style={{margin: 7}}/>
                 <Button
                     title="Back"
                     onPress={()=>this.props.goBack()}
+                    icon={{type: 'antdesign', name: 'left', iconStyle: {left: '-600%'}}}
+                    type="outline"
+                    titleStyle={{left: '500%'}}
                 />
             </ScrollView>
         );

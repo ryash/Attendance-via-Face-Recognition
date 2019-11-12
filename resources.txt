@@ -1,3 +1,0 @@
-https://github.com/brainhubeu/react-native-opencv-tutorial
-
-https://brainhub.eu/blog/opencv-react-native-image-processing/
