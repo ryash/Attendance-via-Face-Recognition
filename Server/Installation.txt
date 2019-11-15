@@ -1,0 +1,24 @@
+Requirements:
+    1). Node and npm must be installed.
+    2). Postgresql database must be installed.
+
+Do the following steps to get server up and running.
+
+Setting up database: 
+
+Step 0: start Postgresql client from terminal, for that open terminal and type command 'sudo -i -u postgres'
+Step 1: run command 'psql' in postgres client it will start the terminal client.
+Step 2: run command "CREATE USER sysadmin WITH SUPERUSER password '12345';"
+Step 3: run command "CREATE DATABASE attendancerecord;"
+Step 4: run command "GRANT ALL PRIVILEGES ON DATABASE attendancerecord TO sysadmin;"
+Step 5: run command "\q"
+Step 6: run command "psql -d attendancerecord -U sysadmin -a -f "<path to Queries.sql in Server/db/Queries.sql>"", when promted for password type '12345' as set in step 2.
+Step 7: run command "psql -d attendancerecord -U sysadmin", when promted for password type '12345' as set in step 2. 
+Step 8: you will be connected to database, there you can run queries to view database, tables and entries.
+
+Setting up Server:
+
+Step 0: Copy model folder from model branch of git repo into the Server folder, in the backend branch
+Step 1: Move into the Serve Folder and bring up the terminal.
+Step 2: run command 'npm install'
+Step 3: run command 'node index.js' Server will start listening on a PORT
