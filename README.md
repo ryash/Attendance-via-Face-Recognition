@@ -7,5 +7,5 @@ Presentation: https://docs.google.com/presentation/d/1o99cGnrliNPNKwjDtP5nxEdcxZ
 <br />
 There are 4 branches(master, backend, model, frontend), each branch has it's documentation and readme. See that for insatallation and usage instructions <br />
 
-APK build : https://github.com/atyant-yadav/Attendance-via-Face-Recognition/raw/master/attendance.apk
+APK build : https://github.com/ryash/Attendance-via-Face-Recognition/raw/master/attendance.apk
 <br />
