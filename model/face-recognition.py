@@ -12,25 +12,31 @@ from keras_openface import utils
 from keras_openface.utils import LRN2D
 from create_embeddings import create_model
 import tensorflow as tf   
+import h5py
+from numpy import loadtxt
+from keras.models import load_model
+
+from numba import jit, cuda 
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)  #suppress warnings of tensorflow 
-Input = Input(shape=(96, 96, 3))
-model = create_model(Input)
+# Input = Input(shape=(96, 96, 3))
+# model = create_model(Input)
 
-# Load weights from csv files
-weights = utils.weights
-weights_dict = utils.load_weights()
+# # Load weights from csv files
+# weights = utils.weights
+# weights_dict = utils.load_weights()
 
-# Set layer weights of the model
-for name in weights:
+# # Set layer weights of the model
+# for name in weights:
     
       
-      if model.get_layer(name) != None:
-            model.get_layer(name).set_weights(weights_dict[name])
-      elif model.get_layer(name) != None:
-            model.get_layer(name).set_weights(weights_dict[name])
-
+#       if model.get_layer(name) != None:
+#             model.get_layer(name).set_weights(weights_dict[name])
+#       elif model.get_layer(name) != None:
+#             model.get_layer(name).set_weights(weights_dict[name])
+model=load_model('m.h5', custom_objects={'tf': tf})
 # genrate embeddings of images inside image folder
+#@jit(target ="cuda")        
 def image_to_embedding(image, model):
       image = cv2.resize(image, (96, 96))
       img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -41,6 +47,7 @@ def image_to_embedding(image, model):
       return embedding
 
 # calculates similarity between faces
+#@jit(target ="cuda")        
 def recognize_face(face_image, embeddings, model):
 
       face_embedding = image_to_embedding(face_image, model)
@@ -57,13 +64,14 @@ def recognize_face(face_image, embeddings, model):
                   min_dist = dist
                   Name = name
 
-      if min_dist <= 0.75:
+      if min_dist < 0.60:
             return str(Name)
 
       else:
             return None
 
 #Recognize images present in Attend_Images Folder
+#@jit(target ="cuda")        
 def recognize_faces(embeddings) :
       font = cv2.FONT_HERSHEY_SIMPLEX
       
@@ -74,8 +82,8 @@ def recognize_faces(embeddings) :
       for img in glob.glob("Attend_Images/*.jpg"):
             cap=cv2.imread(img)
             image=cap
-            image = cv2.resize(image,(96,96))
-            cap = cv2.resize(cap,(96,96))
+            # image = cv2.resize(image,(96,96))
+            # cap = cv2.resize(cap,(96,96))
             gray_img = cv2.cvtColor(cap, cv2.COLOR_BGR2GRAY)
             
             faces = face_cascade.detectMultiScale(gray_img, 1.2, 5)
@@ -89,6 +97,7 @@ def recognize_faces(embeddings) :
             
 
 # embeddings are loaded from embeddings.npy
+#@jit(target ="cuda")        
 def load_embeddings() :
       input_embeddings = {}
       embedding_file = np.load('embeddings.npy',allow_pickle=True)

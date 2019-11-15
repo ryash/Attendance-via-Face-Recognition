@@ -17,10 +17,12 @@ from keras.engine.topology import Layer
 from keras import backend as K
 from keras_openface import utils
 from keras_openface.utils import LRN2D
-
+from keras.models import load_model
+from numba import jit, cuda 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR) #suppress warnings of tensorflow 
 
 #models layers
+
 def create_model(Input) :
       x = ZeroPadding2D(padding=(3, 3), input_shape=(96, 96, 3))(Input)
       x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1')(x)
@@ -246,6 +248,7 @@ if __name__ == "__main__" :
       face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
       
       # genrate embeddings of images inside image folder
+      #@jit(target ="cuda")
       def image_to_embedding(image, model) :
             image = cv2.resize(image,(96,96))
             img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -263,7 +266,9 @@ if __name__ == "__main__" :
                   person_name = os.path.splitext(os.path.basename(file))[0]
 
                   image = cv2.imread(file, 1)
-                  image = cv2.resize(image,(96,96)) # added
+                 # cv2.imshow("as",image)
+                  #print(image.data)
+                  #image = cv2.resize(image,(96,96)) # added
                   #image resize can be done here to reflect in whole model.
                   gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                   faces = face_cascade.detectMultiScale(gray_img, 1.2, 5)
@@ -274,22 +279,24 @@ if __name__ == "__main__" :
 
             return input_embeddings
 
-      model = create_model(Input)
-      
+     # model = create_model(Input)
+      model=load_model('m.h5', custom_objects={'tf': tf})
       # Load weights from csv files
-      weights = utils.weights
-      weights_dict = utils.load_weights()
+      # weights = utils.weights
+      # weights_dict = utils.load_weights()
 
-      # Set layer weights of the model
-      for name in weights:
+      # # Set layer weights of the model
+      # for name in weights:
        
-            if model.get_layer(name) != None:
-                  model.get_layer(name).set_weights(weights_dict[name])
-            elif model.get_layer(name) != None:
-                  model.get_layer(name).set_weights(weights_dict[name])
+      #       if model.get_layer(name) != None:
+      #             model.get_layer(name).set_weights(weights_dict[name])
+      #       elif model.get_layer(name) != None:
+      #             model.get_layer(name).set_weights(weights_dict[name])
 
-                  
+      
+      # model.save("m.h5")
+      # print("model saved")            
       input_embeddings = create_input_image_embeddings() #embedding is created for images present in images folder.
-
+      print(input_embeddings)
       #save embeddings in embeddings.npy
       np.save("embeddings.npy",input_embeddings)
