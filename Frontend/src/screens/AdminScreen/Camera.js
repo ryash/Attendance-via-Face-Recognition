@@ -2,7 +2,21 @@ import React, { Component } from 'react';
 import {
     View,
     BackHandler,
+    Platform,
+    StyleSheet,
+    Text,
+    View,
+    SafeAreaView,
+    PermissionsAndroid,
+    NativeEventEmitter,
+    NativeModules,
+    Button,
+    FlatList,
+    Alert,
+    ActivityIndicator,
+    TouchableOpacity 
 } from 'react-native';
+import { Camera, Permissions, FaceDetector, DangerZone } from 'expo';
 
 import {RNCamera} from 'react-native-camera';
 import {AppContext} from '../../../Contexts.js';
@@ -53,7 +67,14 @@ export default class Camera extends Component {
         this.props.toggleCamera();
         return true;
     }
-
+    export default class MyCamera extends Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            cameraType: 'front',
+            mirrorMode: false
+          };
+        }
     render() {
         return (
             <View style={styles.container}>
@@ -61,34 +82,43 @@ export default class Camera extends Component {
                 ref={ref => {
                   this.camera = ref;
                 }}
-                style={styles.preview}
-                type={RNCamera.Constants.Type.back}
+                style={{ width: '100%', height: '100%' }}
+                type={RNCamera.Constants.Type.front}
+                onFacesDetected={this.onFacesDetected}
                 flashMode={RNCamera.Constants.FlashMode.on}
+                faceDetectionMode={RNCamera.Constants.FaceDetection.Mode.fast}
+                faceDetectionLandmarks={RNCamera.Constants.FaceDetection.Landmarks.all}
+                faceDetectionClassifications={RNCamera.Constants.FaceDetection.Classifications.all}
+                
                 androidCameraPermissionOptions={{
                 title: 'Permission to use camera',
                 message: 'We need your permission to use your camera',
                 buttonPositive: 'Ok',
                 buttonNegative: 'Cancel',
                 }}
+                captureAudio={false}
+
+                onGoogleVisionBarcodesDetected={({ barcodes }) => {
+                    console.log(barcodes);
+                    
             />
-            <View
-                style={styles.capture}>
-                <Button
-                    title="Mark Attendence"
-                    loading={this.state.isLoading}
-                    disabled={this.state.isLoading}
-                    onPress={this.props.takePicture.bind(this)}
-                    style={styles.capture}
-                />
-            </View>
-            <Button
-                onPress={() => this.props.toggleCamera()}
-                title="Close Camera"
-                style={styles.capture}
-            />
+            <View style={{ flex: 0, flexDirection: 'row', justifyContent: 'center' }}>
+                <TouchableOpacity onPress={this.takePicture.bind(this)} style={styles.capture}>
+                    <Text style={{ fontSize: 14 }}> SNAP </Text>
+                </TouchableOpacity>
+             </View>
             </View>
         );
     }
+    takePicture = async() => {
+        if (this.camera) 
+        {
+          const options = { quality: 0.5, base64: true };
+          const data = await this.camera.takePictureAsync(options);
+          console.log(data.uri);
+        }
+    
+    };
 }
 
 let styles = {
@@ -104,9 +134,9 @@ let styles = {
     },
     capture: {
         flex: 0,
-        backgroundColor: '#0f0',
+        backgroundColor: '#fff',
         borderRadius: 5,
-        padding: 0,
+        padding: 15,
         paddingHorizontal: 20,
         alignSelf: 'center',
         margin: 20,
