@@ -19,3 +19,5 @@ https://docs.google.com/presentation/d/1o99cGnrliNPNKwjDtP5nxEdcxZhubVsfBlNq_D5b
 # APK build: 
 https://github.com/ryash/Attendance-via-Face-Recognition/raw/master/attendance.apk
 
+# Guide for Contributing:
+https://www.dataschool.io/how-to-contribute-on-github/
