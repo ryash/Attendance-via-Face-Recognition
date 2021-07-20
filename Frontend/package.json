@@ -12,7 +12,7 @@
   "dependencies": {
     "json2xls": "^0.1.2",
     "react": "16.9.0",
-    "react-native": "0.61.2",
+    "react-native": "0.62.3",
     "react-native-camera": "^3.7.2",
     "react-native-elements": "^1.2.7",
     "react-native-fs": "^2.16.1",
